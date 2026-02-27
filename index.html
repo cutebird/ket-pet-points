@@ -36,6 +36,8 @@
   .btn { border: none; border-radius: 10px; cursor: pointer; font-size: 15px; padding: 0 20px; height: 44px; line-height: 44px; text-align: center; }
   .btn-primary { background: var(--primary); color: #fff; }
   .btn-primary:active { opacity: .85; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:active { opacity: .85; }
   .btn-block { display: block; width: 100%; }
   .text-pos { color: var(--success); }
   .text-neg { color: var(--danger); }
@@ -45,6 +47,14 @@
   .loading { text-align: center; padding: 40px 0; color: var(--text-sub); }
   .gap { margin-top: 12px; }
   .fab { position: fixed; bottom: 76px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 26px; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(74,144,226,.45); display: flex; align-items: center; justify-content: center; z-index: 99; }
+
+  /* ── 课次卡片 ── */
+  .session-card { margin-bottom: 14px; }
+  .session-banner { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: linear-gradient(135deg, #4A90E2, #7eb8f7); border-radius: var(--radius); color: #fff; margin-bottom: 14px; }
+  .session-banner.inactive { background: linear-gradient(135deg, #aaa, #ccc); }
+  .sb-left .sb-status { font-size: 12px; opacity: .85; margin-bottom: 2px; }
+  .sb-left .sb-label { font-size: 17px; font-weight: 700; }
+  .sb-btn { background: rgba(255,255,255,0.25); color: #fff; border: 1.5px solid rgba(255,255,255,0.6); border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; white-space: nowrap; }
 
   /* ── 看板页 ── */
   .dashboard-header { margin-bottom: 16px; }
@@ -101,8 +111,10 @@
   .points-input { flex: 1; font-size: 28px; font-weight: 700; border: none; background: transparent; color: var(--text); outline: none; height: 48px; }
   .points-unit { font-size: 14px; color: var(--text-sub); }
   .note-input { width: 100%; border: none; background: var(--bg); border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text); outline: none; resize: none; min-height: 60px; font-family: inherit; }
+  .session-hint { margin-bottom: 12px; padding: 10px 14px; background: var(--primary-light); border-radius: 10px; font-size: 13px; color: var(--primary); }
+  .session-hint.warn { background: #fff7e6; color: var(--warning); }
 
-  /* ── 排行页 ── */
+  /* ── 排行/课次页 ── */
   .tabs { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 16px; }
   .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 14px; color: #888; border-radius: 8px; cursor: pointer; }
   .tab.active { background: #fff; color: var(--primary); font-weight: 600; box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
@@ -121,6 +133,18 @@
   .bar-wrap { flex: 1; height: 14px; background: #f0f0f0; border-radius: 7px; overflow: hidden; margin: 0 10px; }
   .bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #6eb3f7); border-radius: 7px; transition: width .4s; min-width: 3px; }
   .bar-val { font-size: 14px; font-weight: 600; color: var(--primary); width: 36px; text-align: right; }
+
+  /* ── 课次曲线 ── */
+  .chart-wrap { width: 100%; overflow-x: auto; }
+  canvas#session-chart { display: block; }
+  .chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 10px; font-size: 13px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+  .session-list { margin-top: 12px; }
+  .sess-item { display: flex; align-items: center; padding: 10px 14px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); cursor: pointer; }
+  .sess-date { font-size: 13px; font-weight: 600; color: var(--text); min-width: 70px; }
+  .sess-label { font-size: 13px; color: var(--text-sub); flex: 1; }
+  .sess-pts { display: flex; gap: 10px; }
+  .sess-pt { font-size: 13px; font-weight: 600; }
 
   /* ── 奖励页 ── */
   .stu-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
@@ -156,6 +180,12 @@
   .modal-btns { display: flex; gap: 10px; }
   .modal-cancel { flex: 1; background: var(--bg); color: #666; border: none; border-radius: 10px; height: 44px; font-size: 15px; cursor: pointer; }
   .modal-confirm { flex: 1; background: var(--primary); color: #fff; border: none; border-radius: 10px; height: 44px; font-size: 15px; cursor: pointer; }
+
+  /* ── 开课日期选择 modal ── */
+  .date-modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: flex-end; }
+  .date-modal-box { background: #fff; border-radius: 18px 18px 0 0; width: 100%; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
+  .date-input { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 16px; color: var(--text); outline: none; margin-bottom: 16px; }
+  .date-input:focus { border-color: var(--primary); }
 </style>
 </head>
 <body>
@@ -175,12 +205,25 @@
   </div>
 </div>
 
+<!-- 开课日期选择 Modal -->
+<div id="date-modal" class="date-modal-mask hidden">
+  <div class="date-modal-box">
+    <div class="modal-title" style="margin-bottom:14px">选择上课日期</div>
+    <input type="date" id="date-input" class="date-input">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeDateModal()">取消</button>
+      <button class="modal-confirm" onclick="confirmStartSession()">开始上课</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════ 看板页 ══════════════ -->
 <div id="page-dashboard" class="page">
   <div class="dashboard-header">
     <h1>积分看板</h1>
     <p>KET &amp; PET 英语课堂</p>
   </div>
+  <div id="session-banner-wrap"></div>
   <div id="dashboard-loading" class="loading">加载中...</div>
   <div id="dashboard-cards"></div>
   <button class="fab" onclick="openAddPage(null)">＋</button>
@@ -199,6 +242,8 @@
 <!-- ══════════════ 记录积分页 ══════════════ -->
 <div id="page-add" class="page add-page hidden">
   <div style="font-size:18px;font-weight:700;margin-bottom:14px">记录积分</div>
+
+  <div id="add-session-hint"></div>
 
   <div class="card">
     <div class="step-title">① 选择学生</div>
@@ -239,17 +284,30 @@
   </div>
 </div>
 
-<!-- ══════════════ 排行页 ══════════════ -->
+<!-- ══════════════ 对比页 ══════════════ -->
 <div id="page-leaderboard" class="page hidden">
   <div class="tabs">
     <div class="tab active" data-tab="weekly" onclick="switchLbTab(this)">本周</div>
     <div class="tab" data-tab="total" onclick="switchLbTab(this)">累计</div>
+    <div class="tab" data-tab="sessions" onclick="switchLbTab(this)">课次</div>
   </div>
   <div id="lb-loading" class="loading">加载中...</div>
   <div id="lb-rank-list"></div>
   <div class="card gap" id="lb-bar-card" style="display:none">
     <div class="section-title">直观对比</div>
     <div id="lb-bars"></div>
+  </div>
+  <!-- 课次面板 -->
+  <div id="lb-sessions-panel" class="hidden">
+    <div class="card" style="margin-bottom:12px">
+      <div class="section-title">每节课积分趋势</div>
+      <div class="chart-wrap">
+        <canvas id="session-chart" height="200"></canvas>
+      </div>
+      <div class="chart-legend" id="chart-legend"></div>
+    </div>
+    <div class="section-title" style="margin-bottom:6px">课次列表</div>
+    <div id="session-list" class="session-list"></div>
   </div>
 </div>
 
@@ -315,12 +373,14 @@ const EVENT_CATEGORIES = {
 }
 const GROUP_LABELS = { answer: '回答问题', behavior: '课堂表现', homework: '作业', other: '其他' }
 const ANSWER_RESULTS = { correct: { label: '答对', mul: 1 }, half: { label: '半对', mul: 0.5 }, wrong: { label: '答错', mul: 0 } }
+const STUDENT_COLORS = ['#4A90E2', '#f5a623']
 
 // ══════════════════════════════════════
 // 状态
 // ══════════════════════════════════════
 let state = {
   students: [],
+  activeSession: null,   // 当前课次 {id, session_date, label, is_active}
   currentPage: 'dashboard',
   // 详情页
   detailStudentId: null,
@@ -351,8 +411,16 @@ function fmtDateTime(str) {
   const min = String(d.getMinutes()).padStart(2,'0')
   return `${m}-${day} ${h}:${min}`
 }
+function fmtDate(str) {
+  // str could be 'YYYY-MM-DD' or ISO
+  return str ? str.slice(0, 10) : ''
+}
 function fmtPts(p) { return p > 0 ? `+${p}` : `${p}` }
 function ptsClass(p) { return p >= 0 ? 'text-pos' : 'text-neg' }
+function todayStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
 
 let toastTimer
 function showToast(msg, duration=2000) {
@@ -383,6 +451,82 @@ function calcAnswerScore(cat, result) {
 }
 
 // ══════════════════════════════════════
+// 课次管理
+// ══════════════════════════════════════
+async function loadActiveSession() {
+  const { data } = await sb.from('sessions').select('*').eq('is_active', true).maybeSingle()
+  state.activeSession = data || null
+}
+
+function renderSessionBanner() {
+  const wrap = document.getElementById('session-banner-wrap')
+  if (!wrap) return
+  if (state.activeSession) {
+    wrap.innerHTML = `
+      <div class="session-banner">
+        <div class="sb-left">
+          <div class="sb-status">🟢 上课中</div>
+          <div class="sb-label">${state.activeSession.label}</div>
+        </div>
+        <button class="sb-btn" onclick="endSession()">结束上课</button>
+      </div>`
+  } else {
+    wrap.innerHTML = `
+      <div class="session-banner inactive">
+        <div class="sb-left">
+          <div class="sb-status">⚪ 未开始</div>
+          <div class="sb-label">今日暂无课次</div>
+        </div>
+        <button class="sb-btn" onclick="openDateModal()">开始上课</button>
+      </div>`
+  }
+}
+
+function openDateModal() {
+  document.getElementById('date-input').value = todayStr()
+  document.getElementById('date-modal').classList.remove('hidden')
+}
+
+function closeDateModal() {
+  document.getElementById('date-modal').classList.add('hidden')
+}
+
+async function confirmStartSession() {
+  const dateVal = document.getElementById('date-input').value
+  if (!dateVal) { showToast('请选择日期'); return }
+  closeDateModal()
+
+  // 先关闭所有其他活跃课次
+  await sb.from('sessions').update({ is_active: false }).eq('is_active', true)
+
+  // 生成 label，如 "2月27日"
+  const d = new Date(dateVal + 'T12:00:00')
+  const label = `${d.getMonth()+1}月${d.getDate()}日`
+
+  const { data, error } = await sb.from('sessions').insert({
+    session_date: dateVal,
+    label,
+    is_active: true
+  }).select().single()
+
+  if (error) { showToast('开课失败，请重试'); return }
+  state.activeSession = data
+  renderSessionBanner()
+  showToast(`已开始：${label} 📚`)
+}
+
+async function endSession() {
+  if (!state.activeSession) return
+  showModal('结束上课', `确认结束「${state.activeSession.label}」课次？`, async () => {
+    const { error } = await sb.from('sessions').update({ is_active: false }).eq('id', state.activeSession.id)
+    if (error) { showToast('操作失败'); return }
+    state.activeSession = null
+    renderSessionBanner()
+    showToast('课次已结束 ✓')
+  })
+}
+
+// ══════════════════════════════════════
 // 页面切换
 // ══════════════════════════════════════
 const pages = ['dashboard','detail','add','leaderboard','rewards']
@@ -401,12 +545,16 @@ function showPage(name, navBtn) {
 async function loadDashboard() {
   document.getElementById('dashboard-loading').style.display = 'block'
   document.getElementById('dashboard-cards').innerHTML = ''
-  const { data, error } = await sb.from('students').select('*').order('id')
+  const [stuRes] = await Promise.all([
+    sb.from('students').select('*').order('id'),
+    loadActiveSession()
+  ])
   document.getElementById('dashboard-loading').style.display = 'none'
-  if (error) { showToast('加载失败'); return }
-  state.students = data
-  const maxPts = Math.max(...data.map(s => s.available_points || 0))
-  document.getElementById('dashboard-cards').innerHTML = data.map(s => {
+  if (stuRes.error) { showToast('加载失败'); return }
+  state.students = stuRes.data
+  renderSessionBanner()
+  const maxPts = Math.max(...stuRes.data.map(s => s.available_points || 0))
+  document.getElementById('dashboard-cards').innerHTML = stuRes.data.map(s => {
     const lead = (s.available_points || 0) === maxPts && maxPts > 0
     return `
     <div class="card score-card ${lead?'lead':''}" onclick="openDetail('${s.id}')">
@@ -530,7 +678,6 @@ function loadMoreEvents() { loadDetailEvents(false) }
 function openAddPage(presetStudentId) {
   state.addCategory = null
   state.addAnswerResult = 'correct'
-  // 预设学生
   if (presetStudentId) {
     const idx = state.students.findIndex(s => s.id === presetStudentId)
     state.addStudentIdx = idx >= 0 ? idx : 0
@@ -539,9 +686,19 @@ function openAddPage(presetStudentId) {
   }
   pages.forEach(p => document.getElementById('page-'+p).classList.toggle('hidden', p !== 'add'))
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+  renderAddSessionHint()
   renderAddStudents()
   renderAddCategories()
   renderAddScoreSection()
+}
+
+function renderAddSessionHint() {
+  const el = document.getElementById('add-session-hint')
+  if (state.activeSession) {
+    el.innerHTML = `<div class="session-hint">📚 当前课次：${state.activeSession.label}</div>`
+  } else {
+    el.innerHTML = `<div class="session-hint warn">⚠️ 未开始课次，积分不会关联课次。可返回看板开始上课。</div>`
+  }
 }
 
 function renderAddStudents() {
@@ -628,13 +785,14 @@ async function submitEvent() {
 
   try {
     for (const studentId of targets) {
-      // 插入事件
-      const { error: evErr } = await sb.from('point_events').insert({
+      const eventData = {
         student_id: studentId, category: state.addCategory, points, note
-      })
+      }
+      if (state.activeSession) eventData.session_id = state.activeSession.id
+
+      const { error: evErr } = await sb.from('point_events').insert(eventData)
       if (evErr) throw evErr
 
-      // 更新学生积分
       const student = state.students.find(s => s.id === studentId)
       const updateData = { available_points: (student.available_points || 0) + points }
       if (points > 0) updateData.total_points = (student.total_points || 0) + points
@@ -643,7 +801,6 @@ async function submitEvent() {
     }
     showToast('记录成功 ✓')
     document.getElementById('add-note').value = ''
-    // 刷新学生数据
     const { data } = await sb.from('students').select('*').order('id')
     if (data) state.students = data
     setTimeout(() => showPage('dashboard'), 1200)
@@ -657,26 +814,38 @@ async function submitEvent() {
 }
 
 // ══════════════════════════════════════
-// 排行页
+// 对比/排行页
 // ══════════════════════════════════════
 function switchLbTab(el) {
   document.querySelectorAll('#page-leaderboard .tab').forEach(t => t.classList.toggle('active', t === el))
   state.lbTab = el.dataset.tab
-  if (state.lbData) renderLeaderboard()
+  if (state.lbTab === 'sessions') {
+    document.getElementById('lb-rank-list').innerHTML = ''
+    document.getElementById('lb-bar-card').style.display = 'none'
+    document.getElementById('lb-sessions-panel').classList.remove('hidden')
+    if (!state.lbData) { loadLeaderboard(); return }
+    renderSessionsChart()
+  } else {
+    document.getElementById('lb-sessions-panel').classList.add('hidden')
+    if (state.lbData) renderLeaderboard()
+  }
 }
 
 async function loadLeaderboard() {
   document.getElementById('lb-loading').style.display = 'block'
   document.getElementById('lb-rank-list').innerHTML = ''
   document.getElementById('lb-bar-card').style.display = 'none'
+  document.getElementById('lb-sessions-panel').classList.add('hidden')
 
   const weekStart = getWeekStart()
-  const [stuRes, weekRes] = await Promise.all([
+  const [stuRes, weekRes, sessRes, eventsRes] = await Promise.all([
     sb.from('students').select('*').order('id'),
-    sb.from('point_events').select('*').gte('created_at', weekStart)
+    sb.from('point_events').select('*').gte('created_at', weekStart),
+    sb.from('sessions').select('*').order('session_date', { ascending: true }),
+    sb.from('point_events').select('student_id, points, session_id').not('session_id', 'is', null)
   ])
   document.getElementById('lb-loading').style.display = 'none'
-  if (stuRes.error || weekRes.error) { showToast('加载失败'); return }
+  if (stuRes.error) { showToast('加载失败'); return }
 
   const students = stuRes.data
   const weeklyMap = {}
@@ -686,8 +855,16 @@ async function loadLeaderboard() {
   state.lbData = {
     weekly: [...students].map(s => ({ ...s, pts: weeklyMap[s.id] || 0 })).sort((a,b) => b.pts - a.pts),
     total:  [...students].map(s => ({ ...s, pts: s.total_points || 0 })).sort((a,b) => b.pts - a.pts),
+    sessions: sessRes.data || [],
+    sessionEvents: eventsRes.data || [],
+    students,
   }
-  renderLeaderboard()
+
+  if (state.lbTab === 'sessions') {
+    renderSessionsChart()
+  } else {
+    renderLeaderboard()
+  }
 }
 
 function renderLeaderboard() {
@@ -714,6 +891,126 @@ function renderLeaderboard() {
       <span class="bar-val">${s.pts}</span>
     </div>`
   ).join('')
+}
+
+function renderSessionsChart() {
+  document.getElementById('lb-sessions-panel').classList.remove('hidden')
+  const { sessions, sessionEvents, students } = state.lbData
+  if (!sessions || sessions.length === 0) {
+    document.getElementById('session-list').innerHTML = '<div class="empty"><span class="eicon">📅</span>暂无课次数据</div>'
+    const canvas = document.getElementById('session-chart')
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    document.getElementById('chart-legend').innerHTML = ''
+    return
+  }
+
+  // 计算每节课每个学生的积分
+  const sessMap = {}
+  sessions.forEach(s => { sessMap[s.id] = {} })
+  students.forEach(st => {
+    sessions.forEach(s => { sessMap[s.id][st.id] = 0 })
+  })
+  sessionEvents.forEach(e => {
+    if (sessMap[e.session_id] && e.student_id in sessMap[e.session_id]) {
+      sessMap[e.session_id][e.student_id] += e.points || 0
+    }
+  })
+
+  const labels = sessions.map(s => s.label)
+  const datasets = students.map((st, idx) => ({
+    studentId: st.id,
+    name: st.name,
+    avatar: st.avatar,
+    color: STUDENT_COLORS[idx] || '#666',
+    data: sessions.map(s => sessMap[s.id][st.id] || 0),
+  }))
+
+  drawLineChart('session-chart', labels, datasets)
+
+  // 图例
+  document.getElementById('chart-legend').innerHTML = datasets.map(d =>
+    `<span><span class="legend-dot" style="background:${d.color}"></span>${d.avatar} ${d.name}</span>`
+  ).join('')
+
+  // 课次列表
+  document.getElementById('session-list').innerHTML = [...sessions].reverse().map(sess => {
+    const pts = datasets.map(d => {
+      const idx = sessions.findIndex(s => s.id === sess.id)
+      return { name: d.name, avatar: d.avatar, val: d.data[idx] || 0, color: d.color }
+    })
+    return `
+    <div class="sess-item">
+      <span class="sess-date">${sess.label}</span>
+      <span class="sess-label">${fmtDate(sess.session_date)}</span>
+      <div class="sess-pts">
+        ${pts.map(p => `<span class="sess-pt" style="color:${p.color}">${p.avatar}${p.val}</span>`).join('')}
+      </div>
+    </div>`
+  }).join('')
+}
+
+// ── 纯 Canvas 折线图 ──
+function drawLineChart(canvasId, labels, datasets) {
+  const canvas = document.getElementById(canvasId)
+  const container = canvas.parentElement
+  const W = container.clientWidth || 320
+  canvas.width = W
+  canvas.height = 200
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, W, 200)
+
+  const PAD = { top: 20, right: 20, bottom: 36, left: 36 }
+  const chartW = W - PAD.left - PAD.right
+  const chartH = 200 - PAD.top - PAD.bottom
+
+  const allVals = datasets.flatMap(d => d.data)
+  const minVal = Math.min(0, ...allVals)
+  const maxVal = Math.max(1, ...allVals)
+  const range = maxVal - minVal || 1
+
+  function xPos(i) { return PAD.left + (labels.length <= 1 ? chartW/2 : i * chartW / (labels.length - 1)) }
+  function yPos(v) { return PAD.top + chartH - ((v - minVal) / range) * chartH }
+
+  // 网格线
+  ctx.strokeStyle = '#eee'
+  ctx.lineWidth = 1
+  const gridCount = 4
+  for (let i = 0; i <= gridCount; i++) {
+    const y = PAD.top + (chartH / gridCount) * i
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + chartW, y); ctx.stroke()
+    const v = Math.round(maxVal - (range / gridCount) * i)
+    ctx.fillStyle = '#aaa'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right'
+    ctx.fillText(v, PAD.left - 4, y + 4)
+  }
+
+  // X 轴标签
+  ctx.fillStyle = '#888'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'
+  labels.forEach((l, i) => { ctx.fillText(l, xPos(i), 200 - PAD.bottom + 16) })
+
+  // 折线
+  datasets.forEach(d => {
+    if (d.data.length === 0) return
+    ctx.strokeStyle = d.color
+    ctx.lineWidth = 2.5
+    ctx.lineJoin = 'round'
+    ctx.beginPath()
+    d.data.forEach((v, i) => {
+      if (i === 0) ctx.moveTo(xPos(i), yPos(v))
+      else ctx.lineTo(xPos(i), yPos(v))
+    })
+    ctx.stroke()
+    // 数据点
+    d.data.forEach((v, i) => {
+      ctx.fillStyle = '#fff'
+      ctx.beginPath(); ctx.arc(xPos(i), yPos(v), 4, 0, Math.PI*2); ctx.fill()
+      ctx.fillStyle = d.color
+      ctx.beginPath(); ctx.arc(xPos(i), yPos(v), 3, 0, Math.PI*2); ctx.fill()
+      // 数值标签
+      ctx.fillStyle = d.color; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'
+      ctx.fillText(v, xPos(i), yPos(v) - 8)
+    })
+  })
 }
 
 function getWeekStart() {
@@ -751,7 +1048,6 @@ async function loadRewards() {
     state.rwSelectedStudentId = state.students[0].id
   }
 
-  // 学生选择栏
   document.getElementById('rw-stu-bar').innerHTML = state.students.map(s => `
     <div class="stu-chip ${state.rwSelectedStudentId === s.id ? 'active' : ''}" onclick="selectRwStudent('${s.id}')">
       ${s.avatar} ${s.name}
@@ -759,7 +1055,6 @@ async function loadRewards() {
     </div>`
   ).join('')
 
-  // 奖励列表
   const curStudent = state.students.find(s => s.id === state.rwSelectedStudentId)
   const curPts = curStudent ? (curStudent.available_points || 0) : 0
   document.getElementById('rw-reward-list').innerHTML = rwRes.data.length ? rwRes.data.map(r => `
@@ -776,7 +1071,6 @@ async function loadRewards() {
     </div>`
   ).join('') : '<div class="empty"><span class="eicon">🎁</span>暂无奖励项目</div>'
 
-  // 兑换记录
   const stuMap = {}
   state.students.forEach(s => { stuMap[s.id] = s })
   document.getElementById('rw-hist-list').innerHTML = histRes.data && histRes.data.length ? histRes.data.map(r => {
