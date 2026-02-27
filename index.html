@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KET & PET 积分</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #4A90E2;
+    --primary-light: #e8f2fd;
+    --success: #52c41a;
+    --danger: #ff4d4f;
+    --warning: #faad14;
+    --bg: #f5f6fa;
+    --card: #ffffff;
+    --text: #333333;
+    --text-sub: #888888;
+    --border: #eeeeee;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); font-family: -apple-system, "PingFang SC", sans-serif; color: var(--text); font-size: 15px; }
+  .hidden { display: none !important; }
+
+  /* ── 导航栏 ── */
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0; cursor: pointer; color: #999; font-size: 11px; gap: 3px; border: none; background: none; }
+  .nav-btn .icon { font-size: 22px; }
+  .nav-btn.active { color: var(--primary); }
+
+  /* ── 通用 ── */
+  .page { padding: 16px 16px 80px; min-height: 100vh; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+  .section-title { font-size: 13px; color: var(--text-sub); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; }
+  .btn { border: none; border-radius: 10px; cursor: pointer; font-size: 15px; padding: 0 20px; height: 44px; line-height: 44px; text-align: center; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:active { opacity: .85; }
+  .btn-block { display: block; width: 100%; }
+  .text-pos { color: var(--success); }
+  .text-neg { color: var(--danger); }
+  .text-warn { color: var(--warning); }
+  .empty { text-align: center; padding: 60px 0; color: var(--text-sub); }
+  .empty .eicon { font-size: 48px; display: block; margin-bottom: 8px; }
+  .loading { text-align: center; padding: 40px 0; color: var(--text-sub); }
+  .gap { margin-top: 12px; }
+  .fab { position: fixed; bottom: 76px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 26px; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(74,144,226,.45); display: flex; align-items: center; justify-content: center; z-index: 99; }
+
+  /* ── 看板页 ── */
+  .dashboard-header { margin-bottom: 16px; }
+  .dashboard-header h1 { font-size: 24px; font-weight: 700; }
+  .dashboard-header p { color: var(--text-sub); font-size: 13px; margin-top: 2px; }
+  .score-card { margin-bottom: 14px; cursor: pointer; }
+  .score-card.lead { border: 2px solid var(--primary); }
+  .sc-top { display: flex; align-items: center; margin-bottom: 14px; }
+  .sc-avatar { font-size: 44px; margin-right: 12px; }
+  .sc-name { font-size: 20px; font-weight: 700; }
+  .sc-level { font-size: 12px; color: var(--primary); background: var(--primary-light); padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 3px; }
+  .sc-badge { margin-left: auto; background: var(--primary); color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 12px; }
+  .sc-scores { display: flex; background: var(--bg); border-radius: 10px; padding: 12px 0; }
+  .sc-score { flex: 1; text-align: center; }
+  .sc-score + .sc-score { border-left: 1px solid var(--border); }
+  .sc-num { font-size: 28px; font-weight: 700; color: var(--primary); display: block; }
+  .sc-num.total { color: var(--text); font-size: 22px; }
+  .sc-num.redeemed { color: var(--warning); font-size: 22px; }
+  .sc-label { font-size: 12px; color: var(--text-sub); margin-top: 2px; display: block; }
+  .sc-footer { text-align: right; margin-top: 10px; font-size: 13px; color: var(--primary); }
+
+  /* ── 详情页 ── */
+  .back-btn { display: flex; align-items: center; gap: 4px; color: var(--primary); font-size: 15px; cursor: pointer; margin-bottom: 14px; background: none; border: none; padding: 0; }
+  .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .fchip { flex-shrink: 0; font-size: 13px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: #fff; color: #666; cursor: pointer; white-space: nowrap; }
+  .fchip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .event-item { display: flex; align-items: flex-start; padding: 12px 16px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .ev-icon { font-size: 28px; margin-right: 10px; flex-shrink: 0; }
+  .ev-info { flex: 1; }
+  .ev-label { font-size: 15px; font-weight: 500; }
+  .ev-time { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+  .ev-note { font-size: 13px; color: #888; margin-top: 2px; }
+  .ev-points { font-size: 22px; font-weight: 700; }
+  .load-more-btn { width: 100%; padding: 12px; text-align: center; color: var(--primary); background: none; border: 1px solid var(--primary); border-radius: 10px; font-size: 14px; cursor: pointer; margin-top: 8px; }
+
+  /* ── 记录积分页 ── */
+  .add-page .card { margin-bottom: 12px; }
+  .step-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+  .stu-btns { display: flex; gap: 10px; }
+  .stu-btn { flex: 1; padding: 10px; text-align: center; border-radius: 10px; border: 2px solid transparent; background: var(--bg); color: #666; cursor: pointer; font-size: 15px; }
+  .stu-btn.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); font-weight: 600; }
+  .cat-group-label { font-size: 12px; color: var(--text-sub); margin: 8px 0 6px; }
+  .cat-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cat-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 2px solid transparent; background: var(--bg); color: #555; cursor: pointer; }
+  .cat-chip.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+  .ans-btns { display: flex; gap: 10px; margin-bottom: 12px; }
+  .ans-btn { flex: 1; padding: 10px; text-align: center; border-radius: 10px; border: 2px solid transparent; background: var(--bg); color: #666; cursor: pointer; font-size: 15px; }
+  .ans-btn.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); font-weight: 600; }
+  .points-preview { display: flex; align-items: center; background: var(--bg); border-radius: 10px; padding: 10px 14px; }
+  .pp-label { font-size: 14px; color: #666; }
+  .pp-num { font-size: 32px; font-weight: 700; margin-left: 10px; }
+  .points-input-wrap { display: flex; align-items: center; background: var(--bg); border-radius: 10px; padding: 4px 14px; }
+  .points-input { flex: 1; font-size: 28px; font-weight: 700; border: none; background: transparent; color: var(--text); outline: none; height: 48px; }
+  .points-unit { font-size: 14px; color: var(--text-sub); }
+  .note-input { width: 100%; border: none; background: var(--bg); border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text); outline: none; resize: none; min-height: 60px; font-family: inherit; }
+
+  /* ── 排行页 ── */
+  .tabs { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 16px; }
+  .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 14px; color: #888; border-radius: 8px; cursor: pointer; }
+  .tab.active { background: #fff; color: var(--primary); font-weight: 600; box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+  .rank-item { display: flex; align-items: center; padding: 14px 16px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .rank-num { font-size: 22px; font-weight: 700; width: 36px; text-align: center; color: #ccc; }
+  .rank-num.g1 { color: #FFD700; }
+  .rank-num.g2 { color: #C0C0C0; }
+  .rank-avatar { font-size: 36px; margin: 0 10px; }
+  .rank-info { flex: 1; }
+  .rank-name { font-size: 17px; font-weight: 600; }
+  .rank-sub { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+  .rank-pts { font-size: 28px; font-weight: 700; color: var(--primary); }
+  .rank-unit { font-size: 13px; color: var(--text-sub); font-weight: 400; }
+  .bar-row { display: flex; align-items: center; margin-bottom: 10px; }
+  .bar-name { font-size: 13px; color: #555; width: 70px; }
+  .bar-wrap { flex: 1; height: 14px; background: #f0f0f0; border-radius: 7px; overflow: hidden; margin: 0 10px; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #6eb3f7); border-radius: 7px; transition: width .4s; min-width: 3px; }
+  .bar-val { font-size: 14px; font-weight: 600; color: var(--primary); width: 36px; text-align: right; }
+
+  /* ── 奖励页 ── */
+  .stu-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .stu-chip { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 20px; border: 2px solid transparent; background: var(--bg); color: #555; cursor: pointer; font-size: 14px; }
+  .stu-chip.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+  .stu-chip .chip-pts { font-size: 12px; color: #999; }
+  .stu-chip.active .chip-pts { color: var(--primary); }
+  .reward-item { display: flex; align-items: center; padding: 14px 16px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .rw-icon { font-size: 36px; margin-right: 12px; }
+  .rw-info { flex: 1; }
+  .rw-name { font-size: 16px; font-weight: 600; }
+  .rw-desc { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+  .rw-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .rw-cost { font-size: 18px; font-weight: 700; color: var(--warning); }
+  .rw-btn { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
+  .rw-btn:disabled { background: #ccc; cursor: not-allowed; }
+  .hist-item { display: flex; align-items: center; padding: 12px 16px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .hi-avatar { font-size: 30px; margin-right: 10px; }
+  .hi-info { flex: 1; }
+  .hi-desc { font-size: 14px; color: var(--text); }
+  .hi-time { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+  .hi-cost { font-size: 18px; font-weight: 700; color: var(--danger); }
+
+  /* ── Toast ── */
+  #toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.8); background: rgba(0,0,0,.75); color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 15px; z-index: 999; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+
+  /* ── Modal ── */
+  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: flex-end; }
+  .modal-box { background: #fff; border-radius: 18px 18px 0 0; width: 100%; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
+  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .modal-body { font-size: 14px; color: #555; margin-bottom: 20px; line-height: 1.6; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-cancel { flex: 1; background: var(--bg); color: #666; border: none; border-radius: 10px; height: 44px; font-size: 15px; cursor: pointer; }
+  .modal-confirm { flex: 1; background: var(--primary); color: #fff; border: none; border-radius: 10px; height: 44px; font-size: 15px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Modal -->
+<div id="modal" class="modal-mask hidden">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" id="modal-cancel">取消</button>
+      <button class="modal-confirm" id="modal-confirm">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 看板页 ══════════════ -->
+<div id="page-dashboard" class="page">
+  <div class="dashboard-header">
+    <h1>积分看板</h1>
+    <p>KET &amp; PET 英语课堂</p>
+  </div>
+  <div id="dashboard-loading" class="loading">加载中...</div>
+  <div id="dashboard-cards"></div>
+  <button class="fab" onclick="openAddPage(null)">＋</button>
+</div>
+
+<!-- ══════════════ 详情页 ══════════════ -->
+<div id="page-detail" class="page hidden">
+  <button class="back-btn" onclick="showPage('dashboard')">← 返回</button>
+  <div id="detail-profile"></div>
+  <div class="filter-bar" id="detail-filter"></div>
+  <div id="detail-loading" class="loading hidden">加载中...</div>
+  <div id="detail-list"></div>
+  <button id="detail-more-btn" class="load-more-btn hidden" onclick="loadMoreEvents()">加载更多</button>
+</div>
+
+<!-- ══════════════ 记录积分页 ══════════════ -->
+<div id="page-add" class="page add-page hidden">
+  <div style="font-size:18px;font-weight:700;margin-bottom:14px">记录积分</div>
+
+  <div class="card">
+    <div class="step-title">① 选择学生</div>
+    <div class="stu-btns" id="add-stu-btns"></div>
+  </div>
+
+  <div class="card">
+    <div class="step-title">② 选择类型</div>
+    <div id="add-cat-list"></div>
+  </div>
+
+  <div class="card hidden" id="add-score-section">
+    <div class="step-title">③ 确认分值</div>
+    <div id="add-answer-section" class="hidden">
+      <div style="font-size:13px;color:#666;margin-bottom:8px">回答结果</div>
+      <div class="ans-btns" id="add-ans-btns"></div>
+      <div class="points-preview">
+        <span class="pp-label">本次得分：</span>
+        <span class="pp-num" id="add-calc-pts">0</span>
+      </div>
+    </div>
+    <div id="add-custom-section" class="hidden">
+      <div style="font-size:13px;color:#666;margin-bottom:8px">积分分值</div>
+      <div class="points-input-wrap">
+        <input class="points-input" type="number" id="add-pts-input" placeholder="输入分值">
+        <span class="points-unit">分</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card hidden" id="add-note-section">
+    <div class="step-title">备注（可选）</div>
+    <textarea class="note-input" id="add-note" placeholder="添加备注..." maxlength="100"></textarea>
+  </div>
+
+  <div class="hidden" id="add-submit-wrap" style="margin-top:4px">
+    <button class="btn btn-primary btn-block" id="add-submit-btn" onclick="submitEvent()">确认记录</button>
+  </div>
+</div>
+
+<!-- ══════════════ 排行页 ══════════════ -->
+<div id="page-leaderboard" class="page hidden">
+  <div class="tabs">
+    <div class="tab active" data-tab="weekly" onclick="switchLbTab(this)">本周</div>
+    <div class="tab" data-tab="total" onclick="switchLbTab(this)">累计</div>
+  </div>
+  <div id="lb-loading" class="loading">加载中...</div>
+  <div id="lb-rank-list"></div>
+  <div class="card gap" id="lb-bar-card" style="display:none">
+    <div class="section-title">直观对比</div>
+    <div id="lb-bars"></div>
+  </div>
+</div>
+
+<!-- ══════════════ 奖励页 ══════════════ -->
+<div id="page-rewards" class="page hidden">
+  <div class="tabs">
+    <div class="tab active" data-tab="rewards" onclick="switchRwTab(this)">奖励列表</div>
+    <div class="tab" data-tab="history" onclick="switchRwTab(this)">兑换记录</div>
+  </div>
+  <div id="rw-loading" class="loading">加载中...</div>
+  <div id="rw-content" class="hidden">
+    <div id="rw-rewards-panel">
+      <div class="stu-bar" id="rw-stu-bar"></div>
+      <div id="rw-reward-list"></div>
+    </div>
+    <div id="rw-history-panel" class="hidden">
+      <div id="rw-hist-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 底部导航 ══════════════ -->
+<nav class="nav">
+  <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard',this)">
+    <span class="icon">📊</span><span>看板</span>
+  </button>
+  <button class="nav-btn" data-page="leaderboard" onclick="showPage('leaderboard',this)">
+    <span class="icon">🏆</span><span>对比</span>
+  </button>
+  <button class="nav-btn" data-page="rewards" onclick="showPage('rewards',this)">
+    <span class="icon">🎁</span><span>奖励</span>
+  </button>
+</nav>
+
+<script>
+// ══════════════════════════════════════
+// Supabase 配置
+// ══════════════════════════════════════
+const SUPABASE_URL = 'https://jvzqcrjqfvtrnyyjkwhl.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2enFjcmpxZnZ0cm55eWprd2hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxOTczODEsImV4cCI6MjA4Nzc3MzM4MX0.qkioMGDxUTU1lUeAsaiDAXYxk0p-kTHfbe1L7mEjdWw'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+// ══════════════════════════════════════
+// 常量
+// ══════════════════════════════════════
+const EVENT_CATEGORIES = {
+  answer_easy:         { label: '回答问题·简单', group: 'answer',   icon: '💬', fullScore: 2  },
+  answer_middle:       { label: '回答问题·中等', group: 'answer',   icon: '💬', fullScore: 4  },
+  answer_hard:         { label: '回答问题·困难', group: 'answer',   icon: '💬', fullScore: 8  },
+  behavior_active:     { label: '积极举手',       group: 'behavior', icon: '✋', defaultPoints: 3  },
+  behavior_discipline: { label: '遵守纪律',       group: 'behavior', icon: '😊', defaultPoints: 10 },
+  behavior_help:       { label: '帮助同学',       group: 'behavior', icon: '🤝', defaultPoints: 5  },
+  behavior_creative:   { label: '创新见解',       group: 'behavior', icon: '💡', defaultPoints: 5  },
+  behavior_focus:      { label: '全程专注',       group: 'behavior', icon: '🎯', defaultPoints: 10 },
+  behavior_bad:        { label: '违反纪律',       group: 'behavior', icon: '⚠️', defaultPoints: -5 },
+  hw_complete:         { label: '按时完成作业',   group: 'homework', icon: '📝', defaultPoints: 5  },
+  hw_revised:          { label: '认真修改作业',   group: 'homework', icon: '✏️', defaultPoints: 3  },
+  hw_excellent:        { label: '作业评为优秀',   group: 'homework', icon: '⭐', defaultPoints: 5  },
+  hw_late:             { label: '迟交作业',       group: 'homework', icon: '⏰', defaultPoints: -2 },
+  hw_missing:          { label: '未完成作业',     group: 'homework', icon: '❌', defaultPoints: -5 },
+  activity:            { label: '参与课堂活动',   group: 'other',    icon: '🎮', defaultPoints: 5  },
+  bonus:               { label: '教师特别奖励',   group: 'other',    icon: '🎁', defaultPoints: 0  },
+}
+const GROUP_LABELS = { answer: '回答问题', behavior: '课堂表现', homework: '作业', other: '其他' }
+const ANSWER_RESULTS = { correct: { label: '答对', mul: 1 }, half: { label: '半对', mul: 0.5 }, wrong: { label: '答错', mul: 0 } }
+
+// ══════════════════════════════════════
+// 状态
+// ══════════════════════════════════════
+let state = {
+  students: [],
+  currentPage: 'dashboard',
+  // 详情页
+  detailStudentId: null,
+  detailFilter: null,
+  detailEvents: [],
+  detailSkip: 0,
+  detailHasMore: true,
+  // 记录积分
+  addStudentIdx: 0,
+  addCategory: null,
+  addAnswerResult: 'correct',
+  // 排行
+  lbTab: 'weekly',
+  lbData: null,
+  // 奖励
+  rwTab: 'rewards',
+  rwSelectedStudentId: null,
+}
+
+// ══════════════════════════════════════
+// 工具
+// ══════════════════════════════════════
+function fmtDateTime(str) {
+  const d = new Date(str)
+  const m = String(d.getMonth()+1).padStart(2,'0')
+  const day = String(d.getDate()).padStart(2,'0')
+  const h = String(d.getHours()).padStart(2,'0')
+  const min = String(d.getMinutes()).padStart(2,'0')
+  return `${m}-${day} ${h}:${min}`
+}
+function fmtPts(p) { return p > 0 ? `+${p}` : `${p}` }
+function ptsClass(p) { return p >= 0 ? 'text-pos' : 'text-neg' }
+
+let toastTimer
+function showToast(msg, duration=2000) {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.classList.add('show')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.classList.remove('show'), duration)
+}
+
+function showModal(title, body, onConfirm) {
+  document.getElementById('modal-title').textContent = title
+  document.getElementById('modal-body').textContent = body
+  document.getElementById('modal').classList.remove('hidden')
+  document.getElementById('modal-confirm').onclick = () => {
+    document.getElementById('modal').classList.add('hidden')
+    onConfirm()
+  }
+  document.getElementById('modal-cancel').onclick = () => {
+    document.getElementById('modal').classList.add('hidden')
+  }
+}
+
+function calcAnswerScore(cat, result) {
+  const c = EVENT_CATEGORIES[cat]
+  if (!c || c.group !== 'answer') return 0
+  return Math.round(c.fullScore * ANSWER_RESULTS[result].mul)
+}
+
+// ══════════════════════════════════════
+// 页面切换
+// ══════════════════════════════════════
+const pages = ['dashboard','detail','add','leaderboard','rewards']
+function showPage(name, navBtn) {
+  pages.forEach(p => document.getElementById('page-'+p).classList.toggle('hidden', p !== name))
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === name))
+  state.currentPage = name
+  if (name === 'dashboard') loadDashboard()
+  if (name === 'leaderboard') loadLeaderboard()
+  if (name === 'rewards') loadRewards()
+}
+
+// ══════════════════════════════════════
+// 看板页
+// ══════════════════════════════════════
+async function loadDashboard() {
+  document.getElementById('dashboard-loading').style.display = 'block'
+  document.getElementById('dashboard-cards').innerHTML = ''
+  const { data, error } = await sb.from('students').select('*').order('id')
+  document.getElementById('dashboard-loading').style.display = 'none'
+  if (error) { showToast('加载失败'); return }
+  state.students = data
+  const maxPts = Math.max(...data.map(s => s.available_points || 0))
+  document.getElementById('dashboard-cards').innerHTML = data.map(s => {
+    const lead = (s.available_points || 0) === maxPts && maxPts > 0
+    return `
+    <div class="card score-card ${lead?'lead':''}" onclick="openDetail('${s.id}')">
+      <div class="sc-top">
+        <span class="sc-avatar">${s.avatar}</span>
+        <div>
+          <div class="sc-name">${s.name}</div>
+          <span class="sc-level">${s.level}</span>
+        </div>
+        ${lead ? '<span class="sc-badge">领先</span>' : ''}
+      </div>
+      <div class="sc-scores">
+        <div class="sc-score"><span class="sc-num">${s.available_points||0}</span><span class="sc-label">可用</span></div>
+        <div class="sc-score"><span class="sc-num total">${s.total_points||0}</span><span class="sc-label">累计</span></div>
+        <div class="sc-score"><span class="sc-num redeemed">${s.redeemed_points||0}</span><span class="sc-label">已兑换</span></div>
+      </div>
+      <div class="sc-footer">查看明细 ›</div>
+    </div>`
+  }).join('')
+}
+
+// ══════════════════════════════════════
+// 详情页
+// ══════════════════════════════════════
+function openDetail(studentId) {
+  state.detailStudentId = studentId
+  state.detailFilter = null
+  state.detailEvents = []
+  state.detailSkip = 0
+  state.detailHasMore = true
+  pages.forEach(p => document.getElementById('page-'+p).classList.toggle('hidden', p !== 'detail'))
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+  renderDetailProfile()
+  renderDetailFilter()
+  loadDetailEvents(true)
+}
+
+function renderDetailProfile() {
+  const s = state.students.find(x => x.id === state.detailStudentId)
+  if (!s) return
+  document.getElementById('detail-profile').innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="sc-top">
+        <span class="sc-avatar">${s.avatar}</span>
+        <div>
+          <div class="sc-name">${s.name}</div>
+          <span class="sc-level">${s.level}</span>
+        </div>
+      </div>
+      <div class="sc-scores">
+        <div class="sc-score"><span class="sc-num">${s.available_points||0}</span><span class="sc-label">可用</span></div>
+        <div class="sc-score"><span class="sc-num total">${s.total_points||0}</span><span class="sc-label">累计</span></div>
+        <div class="sc-score"><span class="sc-num redeemed">${s.redeemed_points||0}</span><span class="sc-label">已兑换</span></div>
+      </div>
+      <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="openAddPage('${s.id}')">+ 记录积分</button>
+    </div>`
+}
+
+function renderDetailFilter() {
+  const chips = [{ key: null, label: '全部' }, ...Object.entries(EVENT_CATEGORIES).map(([k,v]) => ({ key: k, label: v.icon+' '+v.label }))]
+  document.getElementById('detail-filter').innerHTML = chips.map(c =>
+    `<div class="fchip ${state.detailFilter === c.key ? 'active' : ''}" onclick="setDetailFilter(${c.key ? `'${c.key}'` : 'null'})">${c.label}</div>`
+  ).join('')
+}
+
+function setDetailFilter(key) {
+  state.detailFilter = key
+  state.detailEvents = []
+  state.detailSkip = 0
+  state.detailHasMore = true
+  renderDetailFilter()
+  loadDetailEvents(true)
+}
+
+async function loadDetailEvents(reset) {
+  if (!state.detailHasMore && !reset) return
+  document.getElementById('detail-loading').classList.toggle('hidden', !reset)
+  const PAGE = 20
+  let q = sb.from('point_events')
+    .select('*')
+    .eq('student_id', state.detailStudentId)
+    .order('created_at', { ascending: false })
+    .range(state.detailSkip, state.detailSkip + PAGE - 1)
+  if (state.detailFilter) q = q.eq('category', state.detailFilter)
+  const { data, error } = await q
+  document.getElementById('detail-loading').classList.add('hidden')
+  if (error) { showToast('加载失败'); return }
+  state.detailEvents = reset ? data : [...state.detailEvents, ...data]
+  state.detailSkip += data.length
+  state.detailHasMore = data.length === PAGE
+  renderDetailEvents()
+}
+
+function renderDetailEvents() {
+  const list = document.getElementById('detail-list')
+  if (state.detailEvents.length === 0) {
+    list.innerHTML = '<div class="empty"><span class="eicon">📭</span>暂无记录</div>'
+  } else {
+    list.innerHTML = state.detailEvents.map(e => {
+      const cat = EVENT_CATEGORIES[e.category] || { label: e.category, icon: '📌' }
+      return `
+      <div class="event-item">
+        <span class="ev-icon">${cat.icon}</span>
+        <div class="ev-info">
+          <div class="ev-label">${cat.label}</div>
+          <div class="ev-time">${fmtDateTime(e.created_at)}</div>
+          ${e.note ? `<div class="ev-note">${e.note}</div>` : ''}
+        </div>
+        <span class="ev-points ${ptsClass(e.points)}">${fmtPts(e.points)}</span>
+      </div>`
+    }).join('')
+  }
+  document.getElementById('detail-more-btn').classList.toggle('hidden', !state.detailHasMore)
+}
+
+function loadMoreEvents() { loadDetailEvents(false) }
+
+// ══════════════════════════════════════
+// 记录积分页
+// ══════════════════════════════════════
+function openAddPage(presetStudentId) {
+  state.addCategory = null
+  state.addAnswerResult = 'correct'
+  // 预设学生
+  if (presetStudentId) {
+    const idx = state.students.findIndex(s => s.id === presetStudentId)
+    state.addStudentIdx = idx >= 0 ? idx : 0
+  } else {
+    state.addStudentIdx = 0
+  }
+  pages.forEach(p => document.getElementById('page-'+p).classList.toggle('hidden', p !== 'add'))
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+  renderAddStudents()
+  renderAddCategories()
+  renderAddScoreSection()
+}
+
+function renderAddStudents() {
+  const btns = [...state.students.map((s,i) => `
+    <div class="stu-btn ${state.addStudentIdx === i ? 'active' : ''}" onclick="selectAddStudent(${i})">${s.avatar} ${s.name}</div>
+  `), `<div class="stu-btn ${state.addStudentIdx === state.students.length ? 'active' : ''}" onclick="selectAddStudent(${state.students.length})">两人同时</div>`]
+  document.getElementById('add-stu-btns').innerHTML = btns.join('')
+}
+
+function selectAddStudent(idx) {
+  state.addStudentIdx = idx
+  renderAddStudents()
+}
+
+function renderAddCategories() {
+  const groups = {}
+  Object.entries(EVENT_CATEGORIES).forEach(([k,v]) => {
+    if (!groups[v.group]) groups[v.group] = []
+    groups[v.group].push({ key: k, ...v })
+  })
+  document.getElementById('add-cat-list').innerHTML = Object.entries(groups).map(([g, items]) => `
+    <div class="cat-group-label">${GROUP_LABELS[g]}</div>
+    <div class="cat-grid">
+      ${items.map(c => `
+        <div class="cat-chip ${state.addCategory === c.key ? 'active' : ''}" onclick="selectCategory('${c.key}')">
+          ${c.icon} ${c.label}
+        </div>`).join('')}
+    </div>
+  `).join('')
+}
+
+function selectCategory(key) {
+  state.addCategory = key
+  renderAddCategories()
+  renderAddScoreSection()
+}
+
+function renderAddScoreSection() {
+  const hasCategory = !!state.addCategory
+  document.getElementById('add-score-section').classList.toggle('hidden', !hasCategory)
+  document.getElementById('add-note-section').classList.toggle('hidden', !hasCategory)
+  document.getElementById('add-submit-wrap').classList.toggle('hidden', !hasCategory)
+  if (!hasCategory) return
+
+  const cat = EVENT_CATEGORIES[state.addCategory]
+  const isAnswer = cat.group === 'answer'
+  document.getElementById('add-answer-section').classList.toggle('hidden', !isAnswer)
+  document.getElementById('add-custom-section').classList.toggle('hidden', isAnswer)
+
+  if (isAnswer) {
+    document.getElementById('add-ans-btns').innerHTML = Object.entries(ANSWER_RESULTS).map(([k,v]) =>
+      `<div class="ans-btn ${state.addAnswerResult === k ? 'active' : ''}" onclick="selectAnswerResult('${k}')">${v.label}</div>`
+    ).join('')
+    const pts = calcAnswerScore(state.addCategory, state.addAnswerResult)
+    const el = document.getElementById('add-calc-pts')
+    el.textContent = fmtPts(pts)
+    el.className = 'pp-num ' + ptsClass(pts)
+  } else {
+    const defaultPts = cat.defaultPoints || 0
+    document.getElementById('add-pts-input').value = defaultPts
+  }
+}
+
+function selectAnswerResult(result) {
+  state.addAnswerResult = result
+  renderAddScoreSection()
+}
+
+async function submitEvent() {
+  if (!state.addCategory) { showToast('请选择积分类型'); return }
+  const cat = EVENT_CATEGORIES[state.addCategory]
+  const isAnswer = cat.group === 'answer'
+  const points = isAnswer
+    ? calcAnswerScore(state.addCategory, state.addAnswerResult)
+    : (parseInt(document.getElementById('add-pts-input').value) || 0)
+  const note = document.getElementById('add-note').value.trim()
+
+  const isBoth = state.addStudentIdx === state.students.length
+  const targets = isBoth ? state.students.map(s=>s.id) : [state.students[state.addStudentIdx].id]
+
+  const btn = document.getElementById('add-submit-btn')
+  btn.disabled = true
+  btn.textContent = '提交中...'
+
+  try {
+    for (const studentId of targets) {
+      // 插入事件
+      const { error: evErr } = await sb.from('point_events').insert({
+        student_id: studentId, category: state.addCategory, points, note
+      })
+      if (evErr) throw evErr
+
+      // 更新学生积分
+      const student = state.students.find(s => s.id === studentId)
+      const updateData = { available_points: (student.available_points || 0) + points }
+      if (points > 0) updateData.total_points = (student.total_points || 0) + points
+      const { error: stErr } = await sb.from('students').update(updateData).eq('id', studentId)
+      if (stErr) throw stErr
+    }
+    showToast('记录成功 ✓')
+    document.getElementById('add-note').value = ''
+    // 刷新学生数据
+    const { data } = await sb.from('students').select('*').order('id')
+    if (data) state.students = data
+    setTimeout(() => showPage('dashboard'), 1200)
+  } catch(e) {
+    console.error(e)
+    showToast('提交失败，请重试')
+  } finally {
+    btn.disabled = false
+    btn.textContent = '确认记录'
+  }
+}
+
+// ══════════════════════════════════════
+// 排行页
+// ══════════════════════════════════════
+function switchLbTab(el) {
+  document.querySelectorAll('#page-leaderboard .tab').forEach(t => t.classList.toggle('active', t === el))
+  state.lbTab = el.dataset.tab
+  if (state.lbData) renderLeaderboard()
+}
+
+async function loadLeaderboard() {
+  document.getElementById('lb-loading').style.display = 'block'
+  document.getElementById('lb-rank-list').innerHTML = ''
+  document.getElementById('lb-bar-card').style.display = 'none'
+
+  const weekStart = getWeekStart()
+  const [stuRes, weekRes] = await Promise.all([
+    sb.from('students').select('*').order('id'),
+    sb.from('point_events').select('*').gte('created_at', weekStart)
+  ])
+  document.getElementById('lb-loading').style.display = 'none'
+  if (stuRes.error || weekRes.error) { showToast('加载失败'); return }
+
+  const students = stuRes.data
+  const weeklyMap = {}
+  students.forEach(s => { weeklyMap[s.id] = 0 })
+  weekRes.data.forEach(e => { if (weeklyMap[e.student_id] !== undefined) weeklyMap[e.student_id] += e.points || 0 })
+
+  state.lbData = {
+    weekly: [...students].map(s => ({ ...s, pts: weeklyMap[s.id] || 0 })).sort((a,b) => b.pts - a.pts),
+    total:  [...students].map(s => ({ ...s, pts: s.total_points || 0 })).sort((a,b) => b.pts - a.pts),
+  }
+  renderLeaderboard()
+}
+
+function renderLeaderboard() {
+  const list = state.lbData[state.lbTab]
+  const maxPts = Math.max(...list.map(s => s.pts), 1)
+  document.getElementById('lb-rank-list').innerHTML = list.map((s, i) => `
+    <div class="rank-item">
+      <span class="rank-num ${i===0?'g1':i===1?'g2':''}">${i===0?'🥇':i===1?'🥈':i+1}</span>
+      <span class="rank-avatar">${s.avatar}</span>
+      <div class="rank-info">
+        <div class="rank-name">${s.name}</div>
+        <div class="rank-sub">${state.lbTab === 'weekly' ? '本周积分' : '累计积分'}</div>
+      </div>
+      <span class="rank-pts">${s.pts}<span class="rank-unit"> 分</span></span>
+    </div>`
+  ).join('')
+
+  const barCard = document.getElementById('lb-bar-card')
+  barCard.style.display = 'block'
+  document.getElementById('lb-bars').innerHTML = list.map(s => `
+    <div class="bar-row">
+      <span class="bar-name">${s.avatar} ${s.name}</span>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(s.pts/maxPts*100)}%"></div></div>
+      <span class="bar-val">${s.pts}</span>
+    </div>`
+  ).join('')
+}
+
+function getWeekStart() {
+  const now = new Date()
+  const day = now.getDay() === 0 ? 6 : now.getDay() - 1
+  now.setDate(now.getDate() - day)
+  now.setHours(0,0,0,0)
+  return now.toISOString()
+}
+
+// ══════════════════════════════════════
+// 奖励页
+// ══════════════════════════════════════
+function switchRwTab(el) {
+  document.querySelectorAll('#page-rewards .tab').forEach(t => t.classList.toggle('active', t === el))
+  state.rwTab = el.dataset.tab
+  document.getElementById('rw-rewards-panel').classList.toggle('hidden', state.rwTab !== 'rewards')
+  document.getElementById('rw-history-panel').classList.toggle('hidden', state.rwTab !== 'history')
+}
+
+async function loadRewards() {
+  document.getElementById('rw-loading').style.display = 'block'
+  document.getElementById('rw-content').classList.add('hidden')
+
+  const [rwRes, stuRes, histRes] = await Promise.all([
+    sb.from('rewards').select('*').eq('is_active', true).order('sort_order'),
+    sb.from('students').select('*').order('id'),
+    sb.from('redemptions').select('*').order('created_at', { ascending: false }).limit(50)
+  ])
+  document.getElementById('rw-loading').style.display = 'none'
+  if (rwRes.error) { showToast('加载失败'); return }
+
+  state.students = stuRes.data || state.students
+  if (!state.rwSelectedStudentId && state.students.length > 0) {
+    state.rwSelectedStudentId = state.students[0].id
+  }
+
+  // 学生选择栏
+  document.getElementById('rw-stu-bar').innerHTML = state.students.map(s => `
+    <div class="stu-chip ${state.rwSelectedStudentId === s.id ? 'active' : ''}" onclick="selectRwStudent('${s.id}')">
+      ${s.avatar} ${s.name}
+      <span class="chip-pts">${s.available_points||0}分</span>
+    </div>`
+  ).join('')
+
+  // 奖励列表
+  const curStudent = state.students.find(s => s.id === state.rwSelectedStudentId)
+  const curPts = curStudent ? (curStudent.available_points || 0) : 0
+  document.getElementById('rw-reward-list').innerHTML = rwRes.data.length ? rwRes.data.map(r => `
+    <div class="reward-item">
+      <span class="rw-icon">${r.icon || '🎁'}</span>
+      <div class="rw-info">
+        <div class="rw-name">${r.name}</div>
+        ${r.description ? `<div class="rw-desc">${r.description}</div>` : ''}
+      </div>
+      <div class="rw-right">
+        <span class="rw-cost">${r.points} 分</span>
+        <button class="rw-btn" ${curPts < r.points ? 'disabled' : ''} onclick="redeemReward('${r.id}','${r.name}',${r.points})">兑换</button>
+      </div>
+    </div>`
+  ).join('') : '<div class="empty"><span class="eicon">🎁</span>暂无奖励项目</div>'
+
+  // 兑换记录
+  const stuMap = {}
+  state.students.forEach(s => { stuMap[s.id] = s })
+  document.getElementById('rw-hist-list').innerHTML = histRes.data && histRes.data.length ? histRes.data.map(r => {
+    const s = stuMap[r.student_id] || {}
+    return `
+    <div class="hist-item">
+      <span class="hi-avatar">${s.avatar || '👤'}</span>
+      <div class="hi-info">
+        <div class="hi-desc">${s.name || r.student_id} 兑换了「${r.reward_name}」</div>
+        <div class="hi-time">${fmtDateTime(r.created_at)}</div>
+      </div>
+      <span class="hi-cost">-${r.points}</span>
+    </div>`
+  }).join('') : '<div class="empty"><span class="eicon">📋</span>暂无兑换记录</div>'
+
+  document.getElementById('rw-content').classList.remove('hidden')
+}
+
+function selectRwStudent(id) {
+  state.rwSelectedStudentId = id
+  loadRewards()
+}
+
+function redeemReward(rewardId, rewardName, points) {
+  const s = state.students.find(x => x.id === state.rwSelectedStudentId)
+  if (!s) return
+  if ((s.available_points || 0) < points) { showToast('积分不足'); return }
+  showModal('确认兑换', `为 ${s.name} 兑换「${rewardName}」，消耗 ${points} 积分`, async () => {
+    try {
+      const { error: rErr } = await sb.from('redemptions').insert({
+        student_id: s.id, reward_id: rewardId, reward_name: rewardName, points
+      })
+      if (rErr) throw rErr
+      const { error: sErr } = await sb.from('students').update({
+        available_points: (s.available_points || 0) - points,
+        redeemed_points: (s.redeemed_points || 0) + points
+      }).eq('id', s.id)
+      if (sErr) throw sErr
+      showToast('兑换成功 ✓')
+      loadRewards()
+    } catch(e) {
+      console.error(e)
+      showToast('兑换失败，请重试')
+    }
+  })
+}
+
+// ══════════════════════════════════════
+// 初始化
+// ══════════════════════════════════════
+loadDashboard()
+</script>
+</body>
+</html>
