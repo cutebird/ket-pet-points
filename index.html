@@ -454,8 +454,12 @@ function calcAnswerScore(cat, result) {
 // 课次管理
 // ══════════════════════════════════════
 async function loadActiveSession() {
-  const { data } = await sb.from('sessions').select('*').eq('is_active', true).maybeSingle()
-  state.activeSession = data || null
+  try {
+    const { data } = await sb.from('sessions').select('*').eq('is_active', true).maybeSingle()
+    state.activeSession = data || null
+  } catch(e) {
+    state.activeSession = null
+  }
 }
 
 function renderSessionBanner() {
@@ -849,8 +853,8 @@ async function loadLeaderboard() {
 
   const students = stuRes.data
   const weeklyMap = {}
-  students.forEach(s => { weeklyMap[s.id] = 0 })
-  weekRes.data.forEach(e => { if (weeklyMap[e.student_id] !== undefined) weeklyMap[e.student_id] += e.points || 0 })
+  students.forEach(s => { weeklyMap[s.id] = 0 });
+  (weekRes.data || []).forEach(e => { if (weeklyMap[e.student_id] !== undefined) weeklyMap[e.student_id] += e.points || 0 })
 
   state.lbData = {
     weekly: [...students].map(s => ({ ...s, pts: weeklyMap[s.id] || 0 })).sort((a,b) => b.pts - a.pts),
