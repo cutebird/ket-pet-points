@@ -282,6 +282,28 @@
   </div>
 </div>
 
+<!-- 修改密码 Modal -->
+<div id="pwd-modal" class="date-modal-mask hidden" onclick="if(event.target===this)closePwdModal()">
+  <div class="date-modal-box">
+    <div class="modal-title" style="margin-bottom:16px">🔑 修改密码</div>
+    <div id="pwd-user-label" style="font-size:14px;color:var(--text-sub);margin-bottom:10px"></div>
+    <div id="pwd-user-bar" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
+    <div class="login-field">
+      <label class="login-label">新密码</label>
+      <input class="login-input" id="pwd-new" type="password" placeholder="请输入新密码" autocomplete="new-password">
+    </div>
+    <div class="login-field" style="margin-top:10px">
+      <label class="login-label">确认密码</label>
+      <input class="login-input" id="pwd-confirm" type="password" placeholder="再次输入新密码" autocomplete="new-password">
+    </div>
+    <div class="login-error" id="pwd-error" style="margin-top:6px"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="modal-cancel" onclick="closePwdModal()">取消</button>
+      <button class="modal-confirm" onclick="confirmPwdChange()">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- 开课日期选择 Modal -->
 <div id="date-modal" class="date-modal-mask hidden">
   <div class="date-modal-box">
@@ -319,6 +341,9 @@
   <div class="page-title">积分看板</div>
   <div class="page-sub" id="dash-welcome">KET &amp; PET 英语课堂</div>
   <div id="session-banner-wrap"></div>
+  <div id="dashboard-pwd-btn" style="display:none;text-align:right;margin-bottom:10px">
+    <button onclick="openPwdModal()" style="background:none;border:none;color:var(--text-sub);font-size:13px;cursor:pointer;padding:4px 0">🔑 修改密码</button>
+  </div>
   <div id="dashboard-loading" class="loading">加载中...</div>
   <div id="dashboard-cards"></div>
   <button class="fab" id="fab-add" onclick="openAddPage(null)" style="display:none">＋</button>
@@ -460,6 +485,11 @@ const ACCOUNTS = {
   cancan:  { password: '1234',   role: 'student',  studentId: 'cancan',   name: '灿灿',   avatar: '🌟' },
   dingding:{ password: '1234',   role: 'student',  studentId: 'dingding', name: '鼎鼎',   avatar: '⭐' },
 }
+// Apply any admin-saved password overrides from localStorage
+;(function(){
+  const overrides = JSON.parse(localStorage.getItem('pwd_overrides') || '{}')
+  Object.keys(overrides).forEach(u => { if (ACCOUNTS[u]) ACCOUNTS[u].password = overrides[u] })
+})()
 
 // ══════════════════════════════════════
 // 常量
@@ -608,6 +638,58 @@ function enterApp() {
   showPageOnly('dashboard')
 }
 
+// ── 修改密码 ──────────────────────────────
+let pwdTargetUser = 'admin'
+
+function openPwdModal() {
+  if (!isAdmin()) return
+  pwdTargetUser = 'admin'
+  document.getElementById('pwd-new').value = ''
+  document.getElementById('pwd-confirm').value = ''
+  document.getElementById('pwd-error').textContent = ''
+  renderPwdUserBar()
+  document.getElementById('pwd-modal').classList.remove('hidden')
+}
+
+function closePwdModal() {
+  document.getElementById('pwd-modal').classList.add('hidden')
+}
+
+function renderPwdUserBar() {
+  const users = [
+    { key: 'admin',    label: '老师 👩‍🏫' },
+    { key: 'cancan',   label: '灿灿 🌟' },
+    { key: 'dingding', label: '鼎鼎 ⭐' },
+  ]
+  document.getElementById('pwd-user-bar').innerHTML = users.map(u =>
+    `<div class="fchip ${pwdTargetUser === u.key ? 'active' : ''}" onclick="selectPwdUser('${u.key}')">${u.label}</div>`
+  ).join('')
+  document.getElementById('pwd-user-label').textContent = `修改 ${users.find(u => u.key === pwdTargetUser).label} 的密码`
+}
+
+function selectPwdUser(key) {
+  pwdTargetUser = key
+  document.getElementById('pwd-new').value = ''
+  document.getElementById('pwd-confirm').value = ''
+  document.getElementById('pwd-error').textContent = ''
+  renderPwdUserBar()
+}
+
+function confirmPwdChange() {
+  const newPwd = document.getElementById('pwd-new').value
+  const confirmPwd = document.getElementById('pwd-confirm').value
+  const errEl = document.getElementById('pwd-error')
+  if (!newPwd) { errEl.textContent = '请输入新密码'; return }
+  if (newPwd.length < 4) { errEl.textContent = '密码至少4位'; return }
+  if (newPwd !== confirmPwd) { errEl.textContent = '两次输入不一致'; return }
+  ACCOUNTS[pwdTargetUser].password = newPwd
+  const saved = JSON.parse(localStorage.getItem('pwd_overrides') || '{}')
+  saved[pwdTargetUser] = newPwd
+  localStorage.setItem('pwd_overrides', JSON.stringify(saved))
+  closePwdModal()
+  showToast('密码已修改 ✓')
+}
+
 function doLogin() {
   const username = document.getElementById('login-username').value.trim().toLowerCase()
   const password = document.getElementById('login-password').value
@@ -737,6 +819,10 @@ async function loadDashboard() {
   state.students = stuRes.data
 
   renderSessionBanner()
+
+  // Admin-only password management button
+  const pwdBtn = document.getElementById('dashboard-pwd-btn')
+  if (pwdBtn) pwdBtn.style.display = isAdmin() ? 'block' : 'none'
 
   const maxPts = Math.max(...stuRes.data.map(s => s.available_points || 0))
   document.getElementById('dashboard-cards').innerHTML = stuRes.data.map(s => {
