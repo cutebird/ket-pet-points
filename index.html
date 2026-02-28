@@ -3,41 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>KET & PET 积分</title>
+<title>灿灿鼎鼎学习星</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
-    --primary: #4A90E2;
-    --primary-light: #e8f2fd;
-    --success: #52c41a;
-    --danger: #ff4d4f;
-    --warning: #faad14;
-    --bg: #f5f6fa;
-    --card: #ffffff;
-    --text: #333333;
-    --text-sub: #888888;
-    --border: #eeeeee;
-    --radius: 14px;
+    --primary: #007AFF;
+    --primary-light: #E3F0FF;
+    --success: #34C759;
+    --danger: #FF3B30;
+    --warning: #FF9500;
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+    --text: #1C1C1E;
+    --text-sub: #8E8E93;
+    --border: #E5E5EA;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { background: var(--bg); font-family: -apple-system, "PingFang SC", sans-serif; color: var(--text); font-size: 15px; }
+  body { background: var(--bg); font-family: -apple-system, "PingFang SC", "SF Pro Text", sans-serif; color: var(--text); font-size: 15px; -webkit-font-smoothing: antialiased; }
   .hidden { display: none !important; }
 
   /* ── 导航栏 ── */
-  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0; cursor: pointer; color: #999; font-size: 11px; gap: 3px; border: none; background: none; }
-  .nav-btn .icon { font-size: 22px; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-top: 0.5px solid rgba(0,0,0,0.12); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0 6px; cursor: pointer; color: #8E8E93; font-size: 10px; gap: 2px; border: none; background: none; transition: color .15s; }
+  .nav-btn .icon { font-size: 24px; line-height: 1; }
   .nav-btn.active { color: var(--primary); }
 
   /* ── 通用 ── */
-  .page { padding: 16px 16px 80px; min-height: 100vh; }
-  .card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
-  .section-title { font-size: 13px; color: var(--text-sub); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; }
-  .btn { border: none; border-radius: 10px; cursor: pointer; font-size: 15px; padding: 0 20px; height: 44px; line-height: 44px; text-align: center; }
+  .page { padding: 16px 16px 88px; min-height: 100vh; }
+  .page-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .page-sub { color: var(--text-sub); font-size: 13px; margin-bottom: 18px; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+  .section-title { font-size: 12px; color: var(--text-sub); font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .6px; }
+  .btn { border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 15px; font-weight: 600; padding: 0 20px; height: 50px; line-height: 50px; text-align: center; transition: opacity .15s, transform .1s; }
+  .btn:active { opacity: .8; transform: scale(.98); }
   .btn-primary { background: var(--primary); color: #fff; }
-  .btn-primary:active { opacity: .85; }
   .btn-danger { background: var(--danger); color: #fff; }
-  .btn-danger:active { opacity: .85; }
   .btn-block { display: block; width: 100%; }
   .text-pos { color: var(--success); }
   .text-neg { color: var(--danger); }
@@ -46,146 +49,173 @@
   .empty .eicon { font-size: 48px; display: block; margin-bottom: 8px; }
   .loading { text-align: center; padding: 40px 0; color: var(--text-sub); }
   .gap { margin-top: 12px; }
-  .fab { position: fixed; bottom: 76px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 26px; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(74,144,226,.45); display: flex; align-items: center; justify-content: center; z-index: 99; }
+  .fab { position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 28px; border: none; cursor: pointer; box-shadow: 0 6px 20px rgba(0,122,255,.4); display: flex; align-items: center; justify-content: center; z-index: 99; transition: transform .15s; }
+  .fab:active { transform: scale(.92); }
+
+  /* ── Login ── */
+  #page-login { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 24px; background: var(--bg); }
+  .login-logo { font-size: 72px; margin-bottom: 12px; }
+  .login-app-name { font-size: 26px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.5px; }
+  .login-tagline { font-size: 14px; color: var(--text-sub); margin-bottom: 40px; }
+  .login-form { width: 100%; max-width: 340px; }
+  .login-field { margin-bottom: 14px; }
+  .login-label { font-size: 13px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: .5px; }
+  .login-input { width: 100%; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 16px; color: var(--text); outline: none; transition: border-color .15s; }
+  .login-input:focus { border-color: var(--primary); }
+  .login-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); height: 52px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: opacity .15s, transform .1s; }
+  .login-btn:active { opacity: .85; transform: scale(.98); }
+  .login-error { color: var(--danger); font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
 
   /* ── 课次卡片 ── */
-  .session-card { margin-bottom: 14px; }
-  .session-banner { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: linear-gradient(135deg, #4A90E2, #7eb8f7); border-radius: var(--radius); color: #fff; margin-bottom: 14px; }
-  .session-banner.inactive { background: linear-gradient(135deg, #aaa, #ccc); }
+  .session-banner { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(135deg, #007AFF, #5AC8FA); border-radius: var(--radius); color: #fff; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,122,255,.3); }
+  .session-banner.inactive { background: linear-gradient(135deg, #8E8E93, #AEAEB2); box-shadow: none; }
   .sb-left .sb-status { font-size: 12px; opacity: .85; margin-bottom: 2px; }
   .sb-left .sb-label { font-size: 17px; font-weight: 700; }
-  .sb-btn { background: rgba(255,255,255,0.25); color: #fff; border: 1.5px solid rgba(255,255,255,0.6); border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .sb-btn { background: rgba(255,255,255,0.25); color: #fff; border: 1.5px solid rgba(255,255,255,0.5); border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 
   /* ── 看板页 ── */
-  .dashboard-header { margin-bottom: 16px; }
-  .dashboard-header h1 { font-size: 24px; font-weight: 700; }
-  .dashboard-header p { color: var(--text-sub); font-size: 13px; margin-top: 2px; }
-  .score-card { margin-bottom: 14px; cursor: pointer; }
+  .score-card { margin-bottom: 14px; cursor: pointer; transition: transform .15s; }
+  .score-card:active { transform: scale(.98); }
   .score-card.lead { border: 2px solid var(--primary); }
   .sc-top { display: flex; align-items: center; margin-bottom: 14px; }
-  .sc-avatar { font-size: 44px; margin-right: 12px; }
-  .sc-name { font-size: 20px; font-weight: 700; }
-  .sc-level { font-size: 12px; color: var(--primary); background: var(--primary-light); padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 3px; }
-  .sc-badge { margin-left: auto; background: var(--primary); color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 12px; }
-  .sc-scores { display: flex; background: var(--bg); border-radius: 10px; padding: 12px 0; }
+  .sc-avatar { font-size: 48px; margin-right: 14px; line-height: 1; }
+  .sc-name { font-size: 22px; font-weight: 700; }
+  .sc-badge { margin-left: auto; background: var(--primary); color: #fff; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+  .sc-scores { display: flex; background: var(--bg); border-radius: var(--radius-sm); padding: 14px 0; }
   .sc-score { flex: 1; text-align: center; }
-  .sc-score + .sc-score { border-left: 1px solid var(--border); }
-  .sc-num { font-size: 28px; font-weight: 700; color: var(--primary); display: block; }
-  .sc-num.total { color: var(--text); font-size: 22px; }
-  .sc-num.redeemed { color: var(--warning); font-size: 22px; }
+  .sc-score + .sc-score { border-left: 0.5px solid var(--border); }
+  .sc-num { font-size: 30px; font-weight: 700; color: var(--primary); display: block; }
+  .sc-num.total { color: var(--text); font-size: 24px; }
+  .sc-num.redeemed { color: var(--warning); font-size: 24px; }
   .sc-label { font-size: 12px; color: var(--text-sub); margin-top: 2px; display: block; }
-  .sc-footer { text-align: right; margin-top: 10px; font-size: 13px; color: var(--primary); }
+  .sc-footer { text-align: right; margin-top: 12px; font-size: 13px; color: var(--primary); font-weight: 500; }
 
   /* ── 详情页 ── */
-  .back-btn { display: flex; align-items: center; gap: 4px; color: var(--primary); font-size: 15px; cursor: pointer; margin-bottom: 14px; background: none; border: none; padding: 0; }
-  .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+  .back-btn { display: flex; align-items: center; gap: 4px; color: var(--primary); font-size: 16px; cursor: pointer; margin-bottom: 16px; background: none; border: none; padding: 0; font-weight: 500; }
+  .filter-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 14px; scrollbar-width: none; }
   .filter-bar::-webkit-scrollbar { display: none; }
-  .fchip { flex-shrink: 0; font-size: 13px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: #fff; color: #666; cursor: pointer; white-space: nowrap; }
+  .fchip { flex-shrink: 0; font-size: 13px; padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--card); color: var(--text-sub); cursor: pointer; white-space: nowrap; }
   .fchip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .event-item { display: flex; align-items: flex-start; padding: 12px 16px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
-  .ev-icon { font-size: 28px; margin-right: 10px; flex-shrink: 0; }
+  .event-item { display: flex; align-items: flex-start; padding: 14px 16px; background: var(--card); border-radius: var(--radius-sm); margin-bottom: 2px; }
+  .event-item + .event-item { border-top: 0.5px solid var(--border); border-radius: 0; }
+  .event-item:first-child { border-top-left-radius: var(--radius-sm); border-top-right-radius: var(--radius-sm); }
+  .event-item:last-child { border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm); }
+  .ev-icon { font-size: 28px; margin-right: 12px; flex-shrink: 0; }
   .ev-info { flex: 1; }
   .ev-label { font-size: 15px; font-weight: 500; }
   .ev-time { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
-  .ev-note { font-size: 13px; color: #888; margin-top: 2px; }
+  .ev-note { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
   .ev-points { font-size: 22px; font-weight: 700; }
-  .load-more-btn { width: 100%; padding: 12px; text-align: center; color: var(--primary); background: none; border: 1px solid var(--primary); border-radius: 10px; font-size: 14px; cursor: pointer; margin-top: 8px; }
+  .load-more-btn { width: 100%; padding: 14px; text-align: center; color: var(--primary); background: var(--card); border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 10px; box-shadow: var(--shadow); }
 
   /* ── 记录积分页 ── */
   .add-page .card { margin-bottom: 12px; }
-  .step-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+  .step-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
   .stu-btns { display: flex; gap: 10px; }
-  .stu-btn { flex: 1; padding: 10px; text-align: center; border-radius: 10px; border: 2px solid transparent; background: var(--bg); color: #666; cursor: pointer; font-size: 15px; }
+  .stu-btn { flex: 1; padding: 14px 10px; text-align: center; border-radius: var(--radius-sm); border: 2px solid transparent; background: var(--bg); color: var(--text-sub); cursor: pointer; font-size: 15px; transition: all .15s; }
   .stu-btn.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); font-weight: 600; }
-  .cat-group-label { font-size: 12px; color: var(--text-sub); margin: 8px 0 6px; }
+  .cat-group-label { font-size: 12px; color: var(--text-sub); font-weight: 600; margin: 10px 0 8px; text-transform: uppercase; letter-spacing: .5px; }
   .cat-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-  .cat-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 2px solid transparent; background: var(--bg); color: #555; cursor: pointer; }
-  .cat-chip.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
-  .ans-btns { display: flex; gap: 10px; margin-bottom: 12px; }
-  .ans-btn { flex: 1; padding: 10px; text-align: center; border-radius: 10px; border: 2px solid transparent; background: var(--bg); color: #666; cursor: pointer; font-size: 15px; }
+  .cat-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; padding: 8px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; transition: all .15s; }
+  .cat-chip.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); font-weight: 600; }
+  .ans-btns { display: flex; gap: 10px; margin-bottom: 14px; }
+  .ans-btn { flex: 1; padding: 14px 10px; text-align: center; border-radius: var(--radius-sm); border: 2px solid transparent; background: var(--bg); color: var(--text-sub); cursor: pointer; font-size: 15px; transition: all .15s; }
   .ans-btn.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); font-weight: 600; }
-  .points-preview { display: flex; align-items: center; background: var(--bg); border-radius: 10px; padding: 10px 14px; }
-  .pp-label { font-size: 14px; color: #666; }
-  .pp-num { font-size: 32px; font-weight: 700; margin-left: 10px; }
-  .points-input-wrap { display: flex; align-items: center; background: var(--bg); border-radius: 10px; padding: 4px 14px; }
-  .points-input { flex: 1; font-size: 28px; font-weight: 700; border: none; background: transparent; color: var(--text); outline: none; height: 48px; }
+  .points-preview { display: flex; align-items: center; background: var(--bg); border-radius: var(--radius-sm); padding: 12px 16px; }
+  .pp-label { font-size: 14px; color: var(--text-sub); }
+  .pp-num { font-size: 34px; font-weight: 700; margin-left: 12px; }
+  .points-input-wrap { display: flex; align-items: center; background: var(--bg); border-radius: var(--radius-sm); padding: 4px 16px; }
+  .points-input { flex: 1; font-size: 30px; font-weight: 700; border: none; background: transparent; color: var(--text); outline: none; height: 52px; }
   .points-unit { font-size: 14px; color: var(--text-sub); }
-  .note-input { width: 100%; border: none; background: var(--bg); border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text); outline: none; resize: none; min-height: 60px; font-family: inherit; }
-  .session-hint { margin-bottom: 12px; padding: 10px 14px; background: var(--primary-light); border-radius: 10px; font-size: 13px; color: var(--primary); }
-  .session-hint.warn { background: #fff7e6; color: var(--warning); }
+  .note-input { width: 100%; border: none; background: var(--bg); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 15px; color: var(--text); outline: none; resize: none; min-height: 64px; font-family: inherit; }
+  .session-hint { margin-bottom: 12px; padding: 12px 16px; background: var(--primary-light); border-radius: var(--radius-sm); font-size: 13px; color: var(--primary); font-weight: 500; }
+  .session-hint.warn { background: #FFF3E0; color: var(--warning); }
+
+  /* ── 删除事件 (仅 admin) ── */
+  .ev-del-btn { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 8px; flex-shrink: 0; }
 
   /* ── 排行/课次页 ── */
-  .tabs { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 16px; }
-  .tab { flex: 1; text-align: center; padding: 8px 0; font-size: 14px; color: #888; border-radius: 8px; cursor: pointer; }
-  .tab.active { background: #fff; color: var(--primary); font-weight: 600; box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
-  .rank-item { display: flex; align-items: center; padding: 14px 16px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
-  .rank-num { font-size: 22px; font-weight: 700; width: 36px; text-align: center; color: #ccc; }
+  .tabs { display: flex; background: rgba(120,120,128,0.12); border-radius: var(--radius-sm); padding: 3px; margin-bottom: 18px; }
+  .tab { flex: 1; text-align: center; padding: 9px 0; font-size: 14px; font-weight: 500; color: var(--text-sub); border-radius: 10px; cursor: pointer; transition: all .2s; }
+  .tab.active { background: var(--card); color: var(--text); font-weight: 700; box-shadow: 0 1px 8px rgba(0,0,0,0.1); }
+  .rank-item { display: flex; align-items: center; padding: 16px; background: var(--card); border-radius: var(--radius-sm); margin-bottom: 10px; box-shadow: var(--shadow); }
+  .rank-num { font-size: 22px; font-weight: 700; width: 36px; text-align: center; color: #C7C7CC; }
   .rank-num.g1 { color: #FFD700; }
-  .rank-num.g2 { color: #C0C0C0; }
-  .rank-avatar { font-size: 36px; margin: 0 10px; }
+  .rank-num.g2 { color: #A8A8A8; }
+  .rank-avatar { font-size: 36px; margin: 0 12px; }
   .rank-info { flex: 1; }
   .rank-name { font-size: 17px; font-weight: 600; }
   .rank-sub { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
   .rank-pts { font-size: 28px; font-weight: 700; color: var(--primary); }
   .rank-unit { font-size: 13px; color: var(--text-sub); font-weight: 400; }
-  .bar-row { display: flex; align-items: center; margin-bottom: 10px; }
-  .bar-name { font-size: 13px; color: #555; width: 70px; }
-  .bar-wrap { flex: 1; height: 14px; background: #f0f0f0; border-radius: 7px; overflow: hidden; margin: 0 10px; }
-  .bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #6eb3f7); border-radius: 7px; transition: width .4s; min-width: 3px; }
-  .bar-val { font-size: 14px; font-weight: 600; color: var(--primary); width: 36px; text-align: right; }
+  .bar-row { display: flex; align-items: center; margin-bottom: 12px; }
+  .bar-name { font-size: 13px; color: var(--text-sub); width: 70px; font-weight: 500; }
+  .bar-wrap { flex: 1; height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; margin: 0 10px; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #5AC8FA); border-radius: 5px; transition: width .5s cubic-bezier(.4,0,.2,1); min-width: 3px; }
+  .bar-val { font-size: 14px; font-weight: 600; color: var(--primary); width: 38px; text-align: right; }
 
   /* ── 课次曲线 ── */
   .chart-wrap { width: 100%; overflow-x: auto; }
   canvas#session-chart { display: block; }
-  .chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 10px; font-size: 13px; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+  .chart-legend { display: flex; gap: 20px; justify-content: center; margin-top: 12px; font-size: 14px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; }
   .session-list { margin-top: 12px; }
-  .sess-item { display: flex; align-items: center; padding: 10px 14px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); cursor: pointer; }
-  .sess-date { font-size: 13px; font-weight: 600; color: var(--text); min-width: 70px; }
+  .sess-item { display: flex; align-items: center; padding: 12px 16px; background: var(--card); border-radius: var(--radius-sm); margin-bottom: 8px; box-shadow: var(--shadow); }
+  .sess-date { font-size: 14px; font-weight: 600; color: var(--text); min-width: 70px; }
   .sess-label { font-size: 13px; color: var(--text-sub); flex: 1; }
-  .sess-pts { display: flex; gap: 10px; }
-  .sess-pt { font-size: 13px; font-weight: 600; }
+  .sess-pts { display: flex; gap: 12px; }
+  .sess-pt { font-size: 13px; font-weight: 700; }
 
   /* ── 奖励页 ── */
-  .stu-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  .stu-chip { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 20px; border: 2px solid transparent; background: var(--bg); color: #555; cursor: pointer; font-size: 14px; }
+  .stu-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stu-chip { display: flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 20px; border: 2px solid transparent; background: var(--card); color: var(--text-sub); cursor: pointer; font-size: 14px; box-shadow: var(--shadow); transition: all .15s; }
   .stu-chip.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
-  .stu-chip .chip-pts { font-size: 12px; color: #999; }
+  .stu-chip .chip-pts { font-size: 12px; color: #C7C7CC; font-weight: 500; }
   .stu-chip.active .chip-pts { color: var(--primary); }
-  .reward-item { display: flex; align-items: center; padding: 14px 16px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
-  .rw-icon { font-size: 36px; margin-right: 12px; }
+  .reward-item { display: flex; align-items: center; padding: 16px; background: var(--card); border-radius: var(--radius-sm); margin-bottom: 10px; box-shadow: var(--shadow); }
+  .rw-icon { font-size: 40px; margin-right: 14px; }
   .rw-info { flex: 1; }
   .rw-name { font-size: 16px; font-weight: 600; }
-  .rw-desc { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
-  .rw-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .rw-desc { font-size: 13px; color: var(--text-sub); margin-top: 3px; }
+  .rw-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
   .rw-cost { font-size: 18px; font-weight: 700; color: var(--warning); }
-  .rw-btn { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
-  .rw-btn:disabled { background: #ccc; cursor: not-allowed; }
-  .hist-item { display: flex; align-items: center; padding: 12px 16px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
-  .hi-avatar { font-size: 30px; margin-right: 10px; }
+  .rw-btn { background: var(--primary); color: #fff; border: none; border-radius: 20px; padding: 8px 18px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+  .rw-btn:disabled { background: #C7C7CC; cursor: not-allowed; }
+  .hist-item { display: flex; align-items: center; padding: 14px 16px; background: var(--card); border-radius: var(--radius-sm); margin-bottom: 8px; box-shadow: var(--shadow); }
+  .hi-avatar { font-size: 30px; margin-right: 12px; }
   .hi-info { flex: 1; }
-  .hi-desc { font-size: 14px; color: var(--text); }
+  .hi-desc { font-size: 14px; color: var(--text); font-weight: 500; }
   .hi-time { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
   .hi-cost { font-size: 18px; font-weight: 700; color: var(--danger); }
 
   /* ── Toast ── */
-  #toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.8); background: rgba(0,0,0,.75); color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 15px; z-index: 999; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
+  #toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.85); background: rgba(30,30,30,.88); backdrop-filter: blur(10px); color: #fff; padding: 12px 24px; border-radius: 16px; font-size: 15px; font-weight: 500; z-index: 999; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
   #toast.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
 
-  /* ── Modal ── */
-  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: flex-end; }
-  .modal-box { background: #fff; border-radius: 18px 18px 0 0; width: 100%; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
-  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
-  .modal-body { font-size: 14px; color: #555; margin-bottom: 20px; line-height: 1.6; }
-  .modal-btns { display: flex; gap: 10px; }
-  .modal-cancel { flex: 1; background: var(--bg); color: #666; border: none; border-radius: 10px; height: 44px; font-size: 15px; cursor: pointer; }
-  .modal-confirm { flex: 1; background: var(--primary); color: #fff; border: none; border-radius: 10px; height: 44px; font-size: 15px; cursor: pointer; }
+  /* ── Modal (sheet style) ── */
+  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; display: flex; align-items: flex-end; }
+  .modal-box { background: var(--card); border-radius: 22px 22px 0 0; width: 100%; padding: 28px 20px calc(28px + env(safe-area-inset-bottom)); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .modal-body { font-size: 15px; color: var(--text-sub); margin-bottom: 24px; line-height: 1.6; }
+  .modal-btns { display: flex; gap: 12px; }
+  .modal-cancel { flex: 1; background: var(--bg); color: var(--text); border: none; border-radius: var(--radius-sm); height: 50px; font-size: 16px; font-weight: 500; cursor: pointer; }
+  .modal-confirm { flex: 1; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); height: 50px; font-size: 16px; font-weight: 600; cursor: pointer; }
 
-  /* ── 开课日期选择 modal ── */
-  .date-modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: flex-end; }
-  .date-modal-box { background: #fff; border-radius: 18px 18px 0 0; width: 100%; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
-  .date-input { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 16px; color: var(--text); outline: none; margin-bottom: 16px; }
-  .date-input:focus { border-color: var(--primary); }
+  /* ── 日期选择 modal ── */
+  .date-modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; display: flex; align-items: flex-end; }
+  .date-modal-box { background: var(--card); border-radius: 22px 22px 0 0; width: 100%; padding: 28px 20px calc(28px + env(safe-area-inset-bottom)); }
+  .date-input { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 16px; color: var(--text); outline: none; margin-bottom: 18px; background: var(--bg); }
+  .date-input:focus { border-color: var(--primary); background: var(--card); }
+
+  /* ── iPad / 宽屏 ── */
+  @media (min-width: 600px) {
+    .page { max-width: 540px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+    #page-login { background: var(--bg); }
+    #page-login .login-form { padding: 40px 36px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .nav { justify-content: center; }
+    .nav-btn { max-width: 120px; }
+    .fab { right: calc((100vw - 540px)/2 + 20px); }
+  }
 </style>
 </head>
 <body>
@@ -208,7 +238,7 @@
 <!-- 开课日期选择 Modal -->
 <div id="date-modal" class="date-modal-mask hidden">
   <div class="date-modal-box">
-    <div class="modal-title" style="margin-bottom:14px">选择上课日期</div>
+    <div class="modal-title" style="margin-bottom:16px">选择上课日期</div>
     <input type="date" id="date-input" class="date-input">
     <div class="modal-btns">
       <button class="modal-cancel" onclick="closeDateModal()">取消</button>
@@ -217,21 +247,38 @@
   </div>
 </div>
 
-<!-- ══════════════ 看板页 ══════════════ -->
-<div id="page-dashboard" class="page">
-  <div class="dashboard-header">
-    <h1>积分看板</h1>
-    <p>KET &amp; PET 英语课堂</p>
+<!-- ══════════════ 登录页 ══════════════ -->
+<div id="page-login" class="hidden">
+  <div class="login-logo">⭐</div>
+  <div class="login-app-name">灿灿鼎鼎学习星</div>
+  <div class="login-tagline">KET &amp; PET 英语课堂积分</div>
+  <div class="login-form">
+    <div class="login-field">
+      <label class="login-label">用户名</label>
+      <input class="login-input" id="login-username" type="text" placeholder="请输入用户名" autocapitalize="none" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label class="login-label">密码</label>
+      <input class="login-input" id="login-password" type="password" placeholder="请输入密码" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">登录</button>
+    <div class="login-error" id="login-error"></div>
   </div>
+</div>
+
+<!-- ══════════════ 看板页 ══════════════ -->
+<div id="page-dashboard" class="page hidden">
+  <div class="page-title">积分看板</div>
+  <div class="page-sub" id="dash-welcome">KET &amp; PET 英语课堂</div>
   <div id="session-banner-wrap"></div>
   <div id="dashboard-loading" class="loading">加载中...</div>
   <div id="dashboard-cards"></div>
-  <button class="fab" onclick="openAddPage(null)">＋</button>
+  <button class="fab" id="fab-add" onclick="openAddPage(null)" style="display:none">＋</button>
 </div>
 
 <!-- ══════════════ 详情页 ══════════════ -->
 <div id="page-detail" class="page hidden">
-  <button class="back-btn" onclick="showPage('dashboard')">← 返回</button>
+  <button class="back-btn" onclick="showPage('dashboard')">‹ 返回</button>
   <div id="detail-profile"></div>
   <div class="filter-bar" id="detail-filter"></div>
   <div id="detail-loading" class="loading hidden">加载中...</div>
@@ -241,7 +288,7 @@
 
 <!-- ══════════════ 记录积分页 ══════════════ -->
 <div id="page-add" class="page add-page hidden">
-  <div style="font-size:18px;font-weight:700;margin-bottom:14px">记录积分</div>
+  <div style="font-size:20px;font-weight:700;margin-bottom:16px">记录积分</div>
 
   <div id="add-session-hint"></div>
 
@@ -258,7 +305,7 @@
   <div class="card hidden" id="add-score-section">
     <div class="step-title">③ 确认分值</div>
     <div id="add-answer-section" class="hidden">
-      <div style="font-size:13px;color:#666;margin-bottom:8px">回答结果</div>
+      <div style="font-size:13px;color:var(--text-sub);margin-bottom:10px;font-weight:500">回答结果</div>
       <div class="ans-btns" id="add-ans-btns"></div>
       <div class="points-preview">
         <span class="pp-label">本次得分：</span>
@@ -266,7 +313,7 @@
       </div>
     </div>
     <div id="add-custom-section" class="hidden">
-      <div style="font-size:13px;color:#666;margin-bottom:8px">积分分值</div>
+      <div style="font-size:13px;color:var(--text-sub);margin-bottom:10px;font-weight:500">积分分值</div>
       <div class="points-input-wrap">
         <input class="points-input" type="number" id="add-pts-input" placeholder="输入分值">
         <span class="points-unit">分</span>
@@ -286,6 +333,8 @@
 
 <!-- ══════════════ 对比页 ══════════════ -->
 <div id="page-leaderboard" class="page hidden">
+  <div class="page-title">积分对比</div>
+  <div class="page-sub" style="margin-bottom:16px">灿灿 vs 鼎鼎</div>
   <div class="tabs">
     <div class="tab active" data-tab="weekly" onclick="switchLbTab(this)">本周</div>
     <div class="tab" data-tab="total" onclick="switchLbTab(this)">累计</div>
@@ -299,20 +348,22 @@
   </div>
   <!-- 课次面板 -->
   <div id="lb-sessions-panel" class="hidden">
-    <div class="card" style="margin-bottom:12px">
+    <div class="card" style="margin-bottom:14px">
       <div class="section-title">每节课积分趋势</div>
       <div class="chart-wrap">
         <canvas id="session-chart" height="200"></canvas>
       </div>
       <div class="chart-legend" id="chart-legend"></div>
     </div>
-    <div class="section-title" style="margin-bottom:6px">课次列表</div>
+    <div class="section-title" style="margin-bottom:8px">课次列表</div>
     <div id="session-list" class="session-list"></div>
   </div>
 </div>
 
 <!-- ══════════════ 奖励页 ══════════════ -->
 <div id="page-rewards" class="page hidden">
+  <div class="page-title">积分奖励</div>
+  <div class="page-sub" style="margin-bottom:16px">用积分兑换奖励</div>
   <div class="tabs">
     <div class="tab active" data-tab="rewards" onclick="switchRwTab(this)">奖励列表</div>
     <div class="tab" data-tab="history" onclick="switchRwTab(this)">兑换记录</div>
@@ -330,7 +381,7 @@
 </div>
 
 <!-- ══════════════ 底部导航 ══════════════ -->
-<nav class="nav">
+<nav class="nav" id="main-nav" style="display:none">
   <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard',this)">
     <span class="icon">📊</span><span>看板</span>
   </button>
@@ -349,6 +400,15 @@
 const SUPABASE_URL = 'https://jvzqcrjqfvtrnyyjkwhl.supabase.co'
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2enFjcmpxZnZ0cm55eWprd2hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxOTczODEsImV4cCI6MjA4Nzc3MzM4MX0.qkioMGDxUTU1lUeAsaiDAXYxk0p-kTHfbe1L7mEjdWw'
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+// ══════════════════════════════════════
+// 用户账号 (本地验证，无需服务端)
+// ══════════════════════════════════════
+const ACCOUNTS = {
+  admin:   { password: '123456', role: 'admin',   studentId: null,       name: '老师',   avatar: '👩‍🏫' },
+  cancan:  { password: '1234',   role: 'student',  studentId: 'cancan',   name: '灿灿',   avatar: '🌟' },
+  dingding:{ password: '1234',   role: 'student',  studentId: 'dingding', name: '鼎鼎',   avatar: '⭐' },
+}
 
 // ══════════════════════════════════════
 // 常量
@@ -373,29 +433,26 @@ const EVENT_CATEGORIES = {
 }
 const GROUP_LABELS = { answer: '回答问题', behavior: '课堂表现', homework: '作业', other: '其他' }
 const ANSWER_RESULTS = { correct: { label: '答对', mul: 1 }, half: { label: '半对', mul: 0.5 }, wrong: { label: '答错', mul: 0 } }
-const STUDENT_COLORS = ['#4A90E2', '#f5a623']
+const STUDENT_COLORS = ['#007AFF', '#FF9500']
 
 // ══════════════════════════════════════
 // 状态
 // ══════════════════════════════════════
 let state = {
+  currentUser: null,   // { username, role, studentId, name, avatar }
   students: [],
-  activeSession: null,   // 当前课次 {id, session_date, label, is_active}
+  activeSession: null,
   currentPage: 'dashboard',
-  // 详情页
   detailStudentId: null,
   detailFilter: null,
   detailEvents: [],
   detailSkip: 0,
   detailHasMore: true,
-  // 记录积分
   addStudentIdx: 0,
   addCategory: null,
   addAnswerResult: 'correct',
-  // 排行
   lbTab: 'weekly',
   lbData: null,
-  // 奖励
   rwTab: 'rewards',
   rwSelectedStudentId: null,
 }
@@ -411,16 +468,14 @@ function fmtDateTime(str) {
   const min = String(d.getMinutes()).padStart(2,'0')
   return `${m}-${day} ${h}:${min}`
 }
-function fmtDate(str) {
-  // str could be 'YYYY-MM-DD' or ISO
-  return str ? str.slice(0, 10) : ''
-}
+function fmtDate(str) { return str ? str.slice(0, 10) : '' }
 function fmtPts(p) { return p > 0 ? `+${p}` : `${p}` }
 function ptsClass(p) { return p >= 0 ? 'text-pos' : 'text-neg' }
 function todayStr() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
+function isAdmin() { return state.currentUser && state.currentUser.role === 'admin' }
 
 let toastTimer
 function showToast(msg, duration=2000) {
@@ -451,6 +506,36 @@ function calcAnswerScore(cat, result) {
 }
 
 // ══════════════════════════════════════
+// 登录 / 登出
+// ══════════════════════════════════════
+function showLoginPage() {
+  document.getElementById('page-login').classList.remove('hidden')
+  document.getElementById('main-nav').style.display = 'none'
+  document.getElementById('fab-add').style.display = 'none'
+  const pages = ['dashboard','detail','add','leaderboard','rewards']
+  pages.forEach(p => document.getElementById('page-'+p).classList.add('hidden'))
+}
+
+function doLogin() {
+  const username = document.getElementById('login-username').value.trim().toLowerCase()
+  const password = document.getElementById('login-password').value
+  const errEl = document.getElementById('login-error')
+  const account = ACCOUNTS[username]
+  if (!account || account.password !== password) {
+    errEl.textContent = '用户名或密码错误'
+    return
+  }
+  errEl.textContent = ''
+  state.currentUser = { username, ...account }
+  document.getElementById('page-login').classList.add('hidden')
+  document.getElementById('main-nav').style.display = 'flex'
+  // admin 才显示 + 按钮
+  document.getElementById('fab-add').style.display = isAdmin() ? 'flex' : 'none'
+  loadDashboard()
+  showPageOnly('dashboard')
+}
+
+// ══════════════════════════════════════
 // 课次管理
 // ══════════════════════════════════════
 async function loadActiveSession() {
@@ -463,8 +548,10 @@ async function loadActiveSession() {
 }
 
 function renderSessionBanner() {
+  // 只有 admin 才能看到/操作课次 banner
   const wrap = document.getElementById('session-banner-wrap')
   if (!wrap) return
+  if (!isAdmin()) { wrap.innerHTML = ''; return }
   if (state.activeSession) {
     wrap.innerHTML = `
       <div class="session-banner">
@@ -490,7 +577,6 @@ function openDateModal() {
   document.getElementById('date-input').value = todayStr()
   document.getElementById('date-modal').classList.remove('hidden')
 }
-
 function closeDateModal() {
   document.getElementById('date-modal').classList.add('hidden')
 }
@@ -499,20 +585,12 @@ async function confirmStartSession() {
   const dateVal = document.getElementById('date-input').value
   if (!dateVal) { showToast('请选择日期'); return }
   closeDateModal()
-
-  // 先关闭所有其他活跃课次
   await sb.from('sessions').update({ is_active: false }).eq('is_active', true)
-
-  // 生成 label，如 "2月27日"
   const d = new Date(dateVal + 'T12:00:00')
   const label = `${d.getMonth()+1}月${d.getDate()}日`
-
   const { data, error } = await sb.from('sessions').insert({
-    session_date: dateVal,
-    label,
-    is_active: true
+    session_date: dateVal, label, is_active: true
   }).select().single()
-
   if (error) { showToast('开课失败，请重试'); return }
   state.activeSession = data
   renderSessionBanner()
@@ -533,11 +611,20 @@ async function endSession() {
 // ══════════════════════════════════════
 // 页面切换
 // ══════════════════════════════════════
-const pages = ['dashboard','detail','add','leaderboard','rewards']
-function showPage(name, navBtn) {
-  pages.forEach(p => document.getElementById('page-'+p).classList.toggle('hidden', p !== name))
+const allPages = ['login','dashboard','detail','add','leaderboard','rewards']
+function showPageOnly(name) {
+  allPages.forEach(p => {
+    const el = document.getElementById('page-'+p)
+    if (el) el.classList.toggle('hidden', p !== name)
+  })
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === name))
   state.currentPage = name
+}
+
+function showPage(name, navBtn) {
+  // 权限检查：学生不能进入记录积分页
+  if (name === 'add' && !isAdmin()) { showToast('无权限操作'); return }
+  showPageOnly(name)
   if (name === 'dashboard') loadDashboard()
   if (name === 'leaderboard') loadLeaderboard()
   if (name === 'rewards') loadRewards()
@@ -547,6 +634,10 @@ function showPage(name, navBtn) {
 // 看板页
 // ══════════════════════════════════════
 async function loadDashboard() {
+  const u = state.currentUser
+  document.getElementById('dash-welcome').textContent =
+    u ? (isAdmin() ? '你好，老师 👩‍🏫' : `你好，${u.name} ${u.avatar}`) : 'KET & PET 英语课堂'
+
   document.getElementById('dashboard-loading').style.display = 'block'
   document.getElementById('dashboard-cards').innerHTML = ''
   const [stuRes] = await Promise.all([
@@ -556,17 +647,24 @@ async function loadDashboard() {
   document.getElementById('dashboard-loading').style.display = 'none'
   if (stuRes.error) { showToast('加载失败'); return }
   state.students = stuRes.data
+
   renderSessionBanner()
-  const maxPts = Math.max(...stuRes.data.map(s => s.available_points || 0))
-  document.getElementById('dashboard-cards').innerHTML = stuRes.data.map(s => {
-    const lead = (s.available_points || 0) === maxPts && maxPts > 0
+
+  // 学生用户只显示自己的卡片，admin 显示全部
+  let displayStudents = stuRes.data
+  if (!isAdmin() && u && u.studentId) {
+    displayStudents = stuRes.data.filter(s => s.id === u.studentId)
+  }
+
+  const maxPts = Math.max(...displayStudents.map(s => s.available_points || 0))
+  document.getElementById('dashboard-cards').innerHTML = displayStudents.map(s => {
+    const lead = (s.available_points || 0) === maxPts && maxPts > 0 && isAdmin()
     return `
     <div class="card score-card ${lead?'lead':''}" onclick="openDetail('${s.id}')">
       <div class="sc-top">
         <span class="sc-avatar">${s.avatar}</span>
         <div>
           <div class="sc-name">${s.name}</div>
-          <span class="sc-level">${s.level}</span>
         </div>
         ${lead ? '<span class="sc-badge">领先</span>' : ''}
       </div>
@@ -584,13 +682,16 @@ async function loadDashboard() {
 // 详情页
 // ══════════════════════════════════════
 function openDetail(studentId) {
+  // 学生只能查看自己的
+  if (!isAdmin() && state.currentUser && state.currentUser.studentId !== studentId) {
+    showToast('只能查看自己的记录'); return
+  }
   state.detailStudentId = studentId
   state.detailFilter = null
   state.detailEvents = []
   state.detailSkip = 0
   state.detailHasMore = true
-  pages.forEach(p => document.getElementById('page-'+p).classList.toggle('hidden', p !== 'detail'))
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+  showPageOnly('detail')
   renderDetailProfile()
   renderDetailFilter()
   loadDetailEvents(true)
@@ -599,13 +700,15 @@ function openDetail(studentId) {
 function renderDetailProfile() {
   const s = state.students.find(x => x.id === state.detailStudentId)
   if (!s) return
+  const addBtn = isAdmin()
+    ? `<button class="btn btn-primary btn-block" style="margin-top:14px" onclick="openAddPage('${s.id}')">+ 记录积分</button>`
+    : ''
   document.getElementById('detail-profile').innerHTML = `
-    <div class="card" style="margin-bottom:12px">
+    <div class="card" style="margin-bottom:14px">
       <div class="sc-top">
         <span class="sc-avatar">${s.avatar}</span>
         <div>
           <div class="sc-name">${s.name}</div>
-          <span class="sc-level">${s.level}</span>
         </div>
       </div>
       <div class="sc-scores">
@@ -613,7 +716,7 @@ function renderDetailProfile() {
         <div class="sc-score"><span class="sc-num total">${s.total_points||0}</span><span class="sc-label">累计</span></div>
         <div class="sc-score"><span class="sc-num redeemed">${s.redeemed_points||0}</span><span class="sc-label">已兑换</span></div>
       </div>
-      <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="openAddPage('${s.id}')">+ 记录积分</button>
+      ${addBtn}
     </div>`
 }
 
@@ -657,10 +760,15 @@ function renderDetailEvents() {
   if (state.detailEvents.length === 0) {
     list.innerHTML = '<div class="empty"><span class="eicon">📭</span>暂无记录</div>'
   } else {
-    list.innerHTML = state.detailEvents.map(e => {
+    const grouped = document.createElement('div')
+    grouped.style.cssText = 'background:var(--card);border-radius:var(--radius-sm);overflow:hidden;box-shadow:var(--shadow)'
+    grouped.innerHTML = state.detailEvents.map(e => {
       const cat = EVENT_CATEGORIES[e.category] || { label: e.category, icon: '📌' }
+      const delBtn = isAdmin()
+        ? `<button class="ev-del-btn" onclick="deleteEvent('${e.id}',event)">✕</button>`
+        : ''
       return `
-      <div class="event-item">
+      <div class="event-item" data-id="${e.id}">
         <span class="ev-icon">${cat.icon}</span>
         <div class="ev-info">
           <div class="ev-label">${cat.label}</div>
@@ -668,18 +776,49 @@ function renderDetailEvents() {
           ${e.note ? `<div class="ev-note">${e.note}</div>` : ''}
         </div>
         <span class="ev-points ${ptsClass(e.points)}">${fmtPts(e.points)}</span>
+        ${delBtn}
       </div>`
     }).join('')
+    list.innerHTML = ''
+    list.appendChild(grouped)
   }
   document.getElementById('detail-more-btn').classList.toggle('hidden', !state.detailHasMore)
 }
 
 function loadMoreEvents() { loadDetailEvents(false) }
 
+// 删除积分记录 (admin only)
+async function deleteEvent(eventId, domEvent) {
+  domEvent.stopPropagation()
+  const ev = state.detailEvents.find(e => e.id === eventId)
+  if (!ev) return
+  const s = state.students.find(x => x.id === ev.student_id)
+  const name = s ? s.name : ev.student_id
+  showModal('删除记录', `确认删除 ${name} 的「${EVENT_CATEGORIES[ev.category]?.label || ev.category}」记录（${fmtPts(ev.points)} 分）？`, async () => {
+    const { error: delErr } = await sb.from('point_events').delete().eq('id', eventId)
+    if (delErr) { showToast('删除失败'); return }
+    // 回滚积分
+    if (s) {
+      const pts = ev.points || 0
+      const updateData = { available_points: (s.available_points || 0) - pts }
+      if (pts > 0) updateData.total_points = (s.total_points || 0) - pts
+      await sb.from('students').update(updateData).eq('id', s.id)
+      // 更新本地 students
+      const idx = state.students.findIndex(x => x.id === s.id)
+      if (idx >= 0) state.students[idx] = { ...s, ...updateData }
+    }
+    showToast('已删除')
+    state.detailEvents = state.detailEvents.filter(e => e.id !== eventId)
+    renderDetailEvents()
+    renderDetailProfile()
+  })
+}
+
 // ══════════════════════════════════════
 // 记录积分页
 // ══════════════════════════════════════
 function openAddPage(presetStudentId) {
+  if (!isAdmin()) { showToast('无权限操作'); return }
   state.addCategory = null
   state.addAnswerResult = 'correct'
   if (presetStudentId) {
@@ -688,8 +827,7 @@ function openAddPage(presetStudentId) {
   } else {
     state.addStudentIdx = 0
   }
-  pages.forEach(p => document.getElementById('page-'+p).classList.toggle('hidden', p !== 'add'))
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+  showPageOnly('add')
   renderAddSessionHint()
   renderAddStudents()
   renderAddCategories()
@@ -772,6 +910,7 @@ function selectAnswerResult(result) {
 }
 
 async function submitEvent() {
+  if (!isAdmin()) { showToast('无权限操作'); return }
   if (!state.addCategory) { showToast('请选择积分类型'); return }
   const cat = EVENT_CATEGORIES[state.addCategory]
   const isAnswer = cat.group === 'answer'
@@ -909,12 +1048,9 @@ function renderSessionsChart() {
     return
   }
 
-  // 计算每节课每个学生的积分
   const sessMap = {}
   sessions.forEach(s => { sessMap[s.id] = {} })
-  students.forEach(st => {
-    sessions.forEach(s => { sessMap[s.id][st.id] = 0 })
-  })
+  students.forEach(st => { sessions.forEach(s => { sessMap[s.id][st.id] = 0 }) })
   sessionEvents.forEach(e => {
     if (sessMap[e.session_id] && e.student_id in sessMap[e.session_id]) {
       sessMap[e.session_id][e.student_id] += e.points || 0
@@ -923,21 +1059,17 @@ function renderSessionsChart() {
 
   const labels = sessions.map(s => s.label)
   const datasets = students.map((st, idx) => ({
-    studentId: st.id,
-    name: st.name,
-    avatar: st.avatar,
+    studentId: st.id, name: st.name, avatar: st.avatar,
     color: STUDENT_COLORS[idx] || '#666',
     data: sessions.map(s => sessMap[s.id][st.id] || 0),
   }))
 
   drawLineChart('session-chart', labels, datasets)
 
-  // 图例
   document.getElementById('chart-legend').innerHTML = datasets.map(d =>
     `<span><span class="legend-dot" style="background:${d.color}"></span>${d.avatar} ${d.name}</span>`
   ).join('')
 
-  // 课次列表
   document.getElementById('session-list').innerHTML = [...sessions].reverse().map(sess => {
     const pts = datasets.map(d => {
       const idx = sessions.findIndex(s => s.id === sess.id)
@@ -954,7 +1086,6 @@ function renderSessionsChart() {
   }).join('')
 }
 
-// ── 纯 Canvas 折线图 ──
 function drawLineChart(canvasId, labels, datasets) {
   const canvas = document.getElementById(canvasId)
   const container = canvas.parentElement
@@ -976,23 +1107,20 @@ function drawLineChart(canvasId, labels, datasets) {
   function xPos(i) { return PAD.left + (labels.length <= 1 ? chartW/2 : i * chartW / (labels.length - 1)) }
   function yPos(v) { return PAD.top + chartH - ((v - minVal) / range) * chartH }
 
-  // 网格线
-  ctx.strokeStyle = '#eee'
+  ctx.strokeStyle = '#E5E5EA'
   ctx.lineWidth = 1
   const gridCount = 4
   for (let i = 0; i <= gridCount; i++) {
     const y = PAD.top + (chartH / gridCount) * i
     ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + chartW, y); ctx.stroke()
     const v = Math.round(maxVal - (range / gridCount) * i)
-    ctx.fillStyle = '#aaa'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right'
+    ctx.fillStyle = '#8E8E93'; ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'right'
     ctx.fillText(v, PAD.left - 4, y + 4)
   }
 
-  // X 轴标签
-  ctx.fillStyle = '#888'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'
+  ctx.fillStyle = '#8E8E93'; ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'center'
   labels.forEach((l, i) => { ctx.fillText(l, xPos(i), 200 - PAD.bottom + 16) })
 
-  // 折线
   datasets.forEach(d => {
     if (d.data.length === 0) return
     ctx.strokeStyle = d.color
@@ -1004,14 +1132,12 @@ function drawLineChart(canvasId, labels, datasets) {
       else ctx.lineTo(xPos(i), yPos(v))
     })
     ctx.stroke()
-    // 数据点
     d.data.forEach((v, i) => {
       ctx.fillStyle = '#fff'
       ctx.beginPath(); ctx.arc(xPos(i), yPos(v), 4, 0, Math.PI*2); ctx.fill()
       ctx.fillStyle = d.color
       ctx.beginPath(); ctx.arc(xPos(i), yPos(v), 3, 0, Math.PI*2); ctx.fill()
-      // 数值标签
-      ctx.fillStyle = d.color; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'
+      ctx.fillStyle = d.color; ctx.font = 'bold 10px -apple-system,sans-serif'; ctx.textAlign = 'center'
       ctx.fillText(v, xPos(i), yPos(v) - 8)
     })
   })
@@ -1048,20 +1174,32 @@ async function loadRewards() {
   if (rwRes.error) { showToast('加载失败'); return }
 
   state.students = stuRes.data || state.students
-  if (!state.rwSelectedStudentId && state.students.length > 0) {
+
+  // 学生默认选自己
+  if (!isAdmin() && state.currentUser && state.currentUser.studentId) {
+    state.rwSelectedStudentId = state.currentUser.studentId
+  } else if (!state.rwSelectedStudentId && state.students.length > 0) {
     state.rwSelectedStudentId = state.students[0].id
   }
 
-  document.getElementById('rw-stu-bar').innerHTML = state.students.map(s => `
+  document.getElementById('rw-stu-bar').innerHTML = state.students.map(s => {
+    const isMe = !isAdmin() && state.currentUser && state.currentUser.studentId !== s.id
+    if (isMe) return '' // 学生只看自己
+    return `
     <div class="stu-chip ${state.rwSelectedStudentId === s.id ? 'active' : ''}" onclick="selectRwStudent('${s.id}')">
       ${s.avatar} ${s.name}
       <span class="chip-pts">${s.available_points||0}分</span>
     </div>`
-  ).join('')
+  }).join('')
 
   const curStudent = state.students.find(s => s.id === state.rwSelectedStudentId)
   const curPts = curStudent ? (curStudent.available_points || 0) : 0
-  document.getElementById('rw-reward-list').innerHTML = rwRes.data.length ? rwRes.data.map(r => `
+
+  document.getElementById('rw-reward-list').innerHTML = rwRes.data.length ? rwRes.data.map(r => {
+    const canRedeem = curPts >= r.points
+    // 学生可以兑换自己的积分；admin 也可以
+    const btnDisabled = !canRedeem
+    return `
     <div class="reward-item">
       <span class="rw-icon">${r.icon || '🎁'}</span>
       <div class="rw-info">
@@ -1070,10 +1208,10 @@ async function loadRewards() {
       </div>
       <div class="rw-right">
         <span class="rw-cost">${r.points} 分</span>
-        <button class="rw-btn" ${curPts < r.points ? 'disabled' : ''} onclick="redeemReward('${r.id}','${r.name}',${r.points})">兑换</button>
+        <button class="rw-btn" ${btnDisabled ? 'disabled' : ''} onclick="redeemReward('${r.id}','${r.name}',${r.points})">兑换</button>
       </div>
     </div>`
-  ).join('') : '<div class="empty"><span class="eicon">🎁</span>暂无奖励项目</div>'
+  }).join('') : '<div class="empty"><span class="eicon">🎁</span>暂无奖励项目</div>'
 
   const stuMap = {}
   state.students.forEach(s => { stuMap[s.id] = s })
@@ -1094,6 +1232,7 @@ async function loadRewards() {
 }
 
 function selectRwStudent(id) {
+  if (!isAdmin()) return // 学生不能切换
   state.rwSelectedStudentId = id
   loadRewards()
 }
@@ -1123,9 +1262,14 @@ function redeemReward(rewardId, rewardName, points) {
 }
 
 // ══════════════════════════════════════
-// 初始化
+// 初始化 — 先显示登录页
 // ══════════════════════════════════════
-loadDashboard()
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('page-login') && !document.getElementById('page-login').classList.contains('hidden')) {
+    doLogin()
+  }
+})
+showLoginPage()
 </script>
 </body>
 </html>
