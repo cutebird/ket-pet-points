@@ -189,6 +189,35 @@
   .hi-time { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
   .hi-cost { font-size: 18px; font-weight: 700; color: var(--danger); }
 
+  /* ── 赠分 modal ── */
+  .gift-modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; display: flex; align-items: flex-end; }
+  .gift-modal-box { background: var(--card); border-radius: 22px 22px 0 0; width: 100%; padding: 28px 20px calc(28px + env(safe-area-inset-bottom)); }
+  .gift-pts-wrap { display: flex; align-items: center; background: var(--bg); border-radius: var(--radius-sm); padding: 4px 16px; margin-bottom: 14px; }
+  .gift-pts-input { flex: 1; font-size: 30px; font-weight: 700; border: none; background: transparent; color: var(--primary); outline: none; height: 52px; }
+  .gift-note-input { width: 100%; border: none; background: var(--bg); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 15px; color: var(--text); outline: none; resize: none; min-height: 56px; font-family: inherit; }
+
+  /* ── 积分 breakdown 展开面板 ── */
+  .score-tap { cursor: pointer; }
+  .score-tap:active { opacity: .7; }
+  .breakdown-panel { margin-top: 16px; border-top: 0.5px solid var(--border); padding-top: 14px; }
+  .breakdown-title { font-size: 12px; color: var(--text-sub); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .breakdown-close { font-size: 18px; color: var(--text-sub); cursor: pointer; padding: 0 4px; }
+  .breakdown-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .breakdown-item:last-child { border-bottom: none; }
+  .bi-icon { font-size: 22px; margin-right: 10px; flex-shrink: 0; }
+  .bi-info { flex: 1; }
+  .bi-label { font-size: 14px; font-weight: 500; }
+  .bi-time { font-size: 12px; color: var(--text-sub); margin-top: 1px; }
+  .bi-note { font-size: 12px; color: var(--text-sub); margin-top: 1px; }
+  .bi-pts { font-size: 18px; font-weight: 700; }
+  .breakdown-empty { text-align: center; color: var(--text-sub); font-size: 14px; padding: 20px 0; }
+  .breakdown-loading { text-align: center; color: var(--text-sub); font-size: 14px; padding: 16px 0; }
+
+  /* ── 排行榜点击展开 ── */
+  .rank-item { cursor: pointer; transition: background .15s; }
+  .rank-item:active { background: var(--bg); }
+  .rank-breakdown { padding: 12px 16px 4px; background: var(--card); border-radius: 0 0 var(--radius-sm) var(--radius-sm); margin-top: -10px; margin-bottom: 10px; border-top: 0.5px solid var(--border); box-shadow: var(--shadow); }
+
   /* ── Toast ── */
   #toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.85); background: rgba(30,30,30,.88); backdrop-filter: blur(10px); color: #fff; padding: 12px 24px; border-radius: 16px; font-size: 15px; font-weight: 500; z-index: 999; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
   #toast.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
@@ -232,6 +261,23 @@
     <div class="modal-btns">
       <button class="modal-cancel" id="modal-cancel">取消</button>
       <button class="modal-confirm" id="modal-confirm">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 赠分 Modal -->
+<div id="gift-modal" class="gift-modal-mask hidden" onclick="if(event.target===this)closeGiftModal()">
+  <div class="gift-modal-box">
+    <div class="modal-title" style="margin-bottom:16px">🎁 赠送积分</div>
+    <div id="gift-to-label" style="font-size:14px;color:var(--text-sub);margin-bottom:14px"></div>
+    <div class="gift-pts-wrap">
+      <span style="font-size:18px;margin-right:8px;color:var(--text-sub)">积分</span>
+      <input id="gift-pts-input" class="gift-pts-input" type="number" min="1" max="9999" placeholder="0" inputmode="numeric">
+    </div>
+    <textarea id="gift-note-input" class="gift-note-input" placeholder="留言（选填）" maxlength="100" rows="2"></textarea>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="modal-cancel" onclick="closeGiftModal()">取消</button>
+      <button class="modal-confirm" onclick="confirmGift()">赠送</button>
     </div>
   </div>
 </div>
@@ -427,6 +473,7 @@ const EVENT_CATEGORIES = {
   behavior_help:       { label: '帮助同学',       group: 'behavior', icon: '🤝', defaultPoints: 5  },
   behavior_creative:   { label: '创新见解',       group: 'behavior', icon: '💡', defaultPoints: 5  },
   behavior_focus:      { label: '全程专注',       group: 'behavior', icon: '🎯', defaultPoints: 10 },
+  gift:                { label: '赠送积分',        group: 'other',    icon: '🎁', defaultPoints: 0  },
   behavior_bad:        { label: '违反纪律',       group: 'behavior', icon: '⚠️', defaultPoints: -5 },
   hw_complete:         { label: '按时完成作业',   group: 'homework', icon: '📝', defaultPoints: 5  },
   hw_revised:          { label: '认真修改作业',   group: 'homework', icon: '✏️', defaultPoints: 3  },
@@ -722,6 +769,8 @@ function openDetail(studentId) {
   state.detailEvents = []
   state.detailSkip = 0
   state.detailHasMore = true
+  detailBreakdownType = null
+  lbBreakdownStudentId = null
   showPageOnly('detail')
   renderDetailProfile()
   renderDetailFilter()
@@ -734,6 +783,12 @@ function renderDetailProfile() {
   const addBtn = isAdmin()
     ? `<button class="btn btn-primary btn-block" style="margin-top:14px" onclick="openAddPage('${s.id}')">+ 记录积分</button>`
     : ''
+  // Gift button: visible only to the OTHER logged-in student
+  const u = state.currentUser
+  const showGift = u && u.role === 'student' && u.studentId !== s.id
+  const giftBtn = showGift
+    ? `<button class="btn btn-block" style="margin-top:10px;background:var(--success);color:#fff" onclick="openGiftModal('${s.id}','${s.name}','${s.avatar}')">🎁 赠送积分给 ${s.name}</button>`
+    : ''
   document.getElementById('detail-profile').innerHTML = `
     <div class="card" style="margin-bottom:14px">
       <div class="sc-top">
@@ -743,12 +798,189 @@ function renderDetailProfile() {
         </div>
       </div>
       <div class="sc-scores">
-        <div class="sc-score"><span class="sc-num">${s.available_points||0}</span><span class="sc-label">可用</span></div>
-        <div class="sc-score"><span class="sc-num total">${s.total_points||0}</span><span class="sc-label">累计</span></div>
-        <div class="sc-score"><span class="sc-num redeemed">${s.redeemed_points||0}</span><span class="sc-label">已兑换</span></div>
+        <div class="sc-score score-tap" onclick="toggleScoreBreakdown('available','${s.id}')">
+          <span class="sc-num">${s.available_points||0}</span>
+          <span class="sc-label">可用 ›</span>
+        </div>
+        <div class="sc-score score-tap" onclick="toggleScoreBreakdown('total','${s.id}')">
+          <span class="sc-num total">${s.total_points||0}</span>
+          <span class="sc-label">累计 ›</span>
+        </div>
+        <div class="sc-score score-tap" onclick="goToRewardsHistory('${s.id}')">
+          <span class="sc-num redeemed">${s.redeemed_points||0}</span>
+          <span class="sc-label">已兑换 ›</span>
+        </div>
       </div>
+      <div id="detail-breakdown-panel" class="hidden"></div>
       ${addBtn}
+      ${giftBtn}
     </div>`
+}
+
+// ── 赠分 ──────────────────────────────────
+let giftTargetId = null
+
+function openGiftModal(targetId, targetName, targetAvatar) {
+  giftTargetId = targetId
+  document.getElementById('gift-to-label').textContent = `赠给：${targetAvatar} ${targetName}`
+  document.getElementById('gift-pts-input').value = ''
+  document.getElementById('gift-note-input').value = ''
+  document.getElementById('gift-modal').classList.remove('hidden')
+  setTimeout(() => document.getElementById('gift-pts-input').focus(), 100)
+}
+
+function closeGiftModal() {
+  document.getElementById('gift-modal').classList.add('hidden')
+  giftTargetId = null
+}
+
+async function confirmGift() {
+  const u = state.currentUser
+  if (!u || u.role !== 'student') return
+  const pts = parseInt(document.getElementById('gift-pts-input').value)
+  if (!pts || pts <= 0) { showToast('请输入赠送积分数'); return }
+  const note = document.getElementById('gift-note-input').value.trim()
+  const sender = state.students.find(s => s.id === u.studentId)
+  if (!sender) return
+  if ((sender.available_points || 0) < pts) { showToast('可用积分不足'); return }
+
+  const btn = document.querySelector('#gift-modal .modal-confirm')
+  btn.disabled = true
+  btn.textContent = '赠送中…'
+
+  // Insert two point_events: deduct from sender, add to receiver
+  const senderNote = `赠给 ${state.students.find(s=>s.id===giftTargetId)?.name || giftTargetId}${note ? '：' + note : ''}`
+  const receiverNote = `${sender.name} 赠送${note ? '：' + note : ''}`
+  const [r1, r2] = await Promise.all([
+    sb.from('point_events').insert({ student_id: u.studentId, category: 'gift', points: -pts, note: senderNote }),
+    sb.from('point_events').insert({ student_id: giftTargetId, category: 'gift', points: pts, note: receiverNote }),
+  ])
+  if (r1.error || r2.error) { showToast('赠送失败，请重试'); btn.disabled = false; btn.textContent = '赠送'; return }
+
+  // Update students table
+  await Promise.all([
+    sb.from('students').update({ available_points: (sender.available_points || 0) - pts }).eq('id', u.studentId),
+    sb.from('students').update({
+      available_points: ((state.students.find(s=>s.id===giftTargetId)?.available_points) || 0) + pts,
+      total_points: ((state.students.find(s=>s.id===giftTargetId)?.total_points) || 0) + pts,
+    }).eq('id', giftTargetId),
+  ])
+
+  closeGiftModal()
+  showToast(`已赠出 ${pts} 积分 🎁`)
+  // Refresh current detail page
+  const stuRes = await sb.from('students').select('*').order('id')
+  if (!stuRes.error) { state.students = stuRes.data }
+  renderDetailProfile()
+  loadDetailEvents(true)
+}
+
+// ── 详情页 breakdown ──────────────────────
+let detailBreakdownType = null   // 'available' | 'total' | null
+
+async function toggleScoreBreakdown(type, studentId) {
+  const panel = document.getElementById('detail-breakdown-panel')
+  if (!panel) return
+  if (detailBreakdownType === type) {
+    // Close
+    detailBreakdownType = null
+    panel.innerHTML = ''
+    panel.classList.add('hidden')
+    return
+  }
+  detailBreakdownType = type
+  panel.classList.remove('hidden')
+  panel.innerHTML = `<div class="breakdown-panel"><div class="breakdown-loading">加载中…</div></div>`
+  const label = type === 'available' ? '可用积分来源' : '累计积分来源'
+  let q = sb.from('point_events').select('*').eq('student_id', studentId).order('created_at', { ascending: false }).limit(50)
+  if (type === 'total') q = q.gt('points', 0)
+  const { data, error } = await q
+  if (error) { panel.innerHTML = '<div class="breakdown-panel"><div class="breakdown-empty">加载失败</div></div>'; return }
+  const items = data.length === 0
+    ? '<div class="breakdown-empty">暂无记录</div>'
+    : data.map(e => {
+        const cat = EVENT_CATEGORIES[e.category] || { label: e.category || '积分', icon: '📌' }
+        const pts = e.points > 0 ? `<span class="bi-pts text-pos">+${e.points}</span>` : `<span class="bi-pts text-neg">${e.points}</span>`
+        return `<div class="breakdown-item">
+          <span class="bi-icon">${cat.icon}</span>
+          <div class="bi-info">
+            <div class="bi-label">${cat.label}${e.note ? ' · ' + e.note : ''}</div>
+            <div class="bi-time">${fmtDateTime(e.created_at)}</div>
+          </div>
+          ${pts}
+        </div>`
+      }).join('')
+  panel.innerHTML = `<div class="breakdown-panel">
+    <div class="breakdown-title">${label} <span class="breakdown-close" onclick="toggleScoreBreakdown('${type}','${studentId}')">✕</span></div>
+    ${items}
+  </div>`
+}
+
+function goToRewardsHistory(studentId) {
+  // Navigate to rewards page and switch to history tab
+  state.rwSelectedStudentId = studentId
+  showPageOnly('rewards')
+  document.querySelectorAll('#page-rewards .tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === 'history')
+  })
+  state.rwTab = 'history'
+  loadRewards()
+  // Highlight nav
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === 'rewards'))
+}
+
+// ── 排行榜 breakdown ──────────────────────
+let lbBreakdownStudentId = null
+
+async function toggleLbBreakdown(studentId, rankItemEl) {
+  const panel = document.getElementById(`lb-bd-${studentId}`)
+  if (!panel) return
+
+  if (lbBreakdownStudentId === studentId) {
+    // Close
+    lbBreakdownStudentId = null
+    panel.classList.add('hidden')
+    panel.innerHTML = ''
+    return
+  }
+  // Close any other open breakdown
+  if (lbBreakdownStudentId) {
+    const prev = document.getElementById(`lb-bd-${lbBreakdownStudentId}`)
+    if (prev) { prev.classList.add('hidden'); prev.innerHTML = '' }
+  }
+  lbBreakdownStudentId = studentId
+  panel.classList.remove('hidden')
+  panel.innerHTML = '<div class="breakdown-loading" style="padding:12px 16px">加载中…</div>'
+
+  let events = []
+  if (state.lbTab === 'weekly') {
+    events = (state.lbData.weekEvents || []).filter(e => e.student_id === studentId)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  } else {
+    // For total tab, fetch all events for this student (limit 50)
+    const { data } = await sb.from('point_events').select('*').eq('student_id', studentId).gt('points', 0).order('created_at', { ascending: false }).limit(50)
+    events = data || []
+  }
+
+  const label = state.lbTab === 'weekly' ? '本周积分明细' : '累计积分来源 (最近50条)'
+  const items = events.length === 0
+    ? '<div class="breakdown-empty">暂无记录</div>'
+    : events.map(e => {
+        const cat = EVENT_CATEGORIES[e.category] || { label: e.category || '积分', icon: '📌' }
+        const pts = e.points > 0 ? `<span class="bi-pts text-pos">+${e.points}</span>` : `<span class="bi-pts text-neg">${e.points}</span>`
+        return `<div class="breakdown-item">
+          <span class="bi-icon">${cat.icon}</span>
+          <div class="bi-info">
+            <div class="bi-label">${cat.label}${e.note ? ' · ' + e.note : ''}</div>
+            <div class="bi-time">${fmtDateTime(e.created_at)}</div>
+          </div>
+          ${pts}
+        </div>`
+      }).join('')
+  panel.innerHTML = `<div style="padding:4px 16px 8px">
+    <div class="breakdown-title" style="margin-bottom:8px">${label}</div>
+    ${items}
+  </div>`
 }
 
 function renderDetailFilter() {
@@ -1032,6 +1264,7 @@ async function loadLeaderboard() {
     sessions: sessRes.data || [],
     sessionEvents: eventsRes.data || [],
     students,
+    weekEvents: weekRes.data || [],
   }
 
   if (state.lbTab === 'sessions') {
@@ -1042,10 +1275,11 @@ async function loadLeaderboard() {
 }
 
 function renderLeaderboard() {
+  lbBreakdownStudentId = null
   const list = state.lbData[state.lbTab]
   const maxPts = Math.max(...list.map(s => s.pts), 1)
   document.getElementById('lb-rank-list').innerHTML = list.map((s, i) => `
-    <div class="rank-item">
+    <div class="rank-item" onclick="toggleLbBreakdown('${s.id}',this)">
       <span class="rank-num ${i===0?'g1':i===1?'g2':''}">${i===0?'🥇':i===1?'🥈':i+1}</span>
       <span class="rank-avatar">${s.avatar}</span>
       <div class="rank-info">
@@ -1053,7 +1287,8 @@ function renderLeaderboard() {
         <div class="rank-sub">${state.lbTab === 'weekly' ? '本周积分' : '累计积分'}</div>
       </div>
       <span class="rank-pts">${s.pts}<span class="rank-unit"> 分</span></span>
-    </div>`
+    </div>
+    <div class="rank-breakdown hidden" id="lb-bd-${s.id}"></div>`
   ).join('')
 
   const barCard = document.getElementById('lb-bar-card')
