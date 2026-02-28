@@ -65,6 +65,7 @@
   .login-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); height: 52px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: opacity .15s, transform .1s; }
   .login-btn:active { opacity: .85; transform: scale(.98); }
   .login-error { color: var(--danger); font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
+  .login-guest-btn { width: 100%; background: none; border: none; color: var(--text-sub); font-size: 14px; cursor: pointer; margin-top: 14px; padding: 8px; text-decoration: underline; text-underline-offset: 3px; }
 
   /* ── 课次卡片 ── */
   .session-banner { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(135deg, #007AFF, #5AC8FA); border-radius: var(--radius); color: #fff; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,122,255,.3); }
@@ -263,6 +264,7 @@
     </div>
     <button class="login-btn" onclick="doLogin()">登录</button>
     <div class="login-error" id="login-error"></div>
+    <button class="login-guest-btn" onclick="doGuest()">游客浏览（只读）</button>
   </div>
 </div>
 
@@ -381,7 +383,7 @@
 </div>
 
 <!-- ══════════════ 底部导航 ══════════════ -->
-<nav class="nav" id="main-nav" style="display:none">
+<nav class="nav" id="main-nav">
   <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard',this)">
     <span class="icon">📊</span><span>看板</span>
   </button>
@@ -390,6 +392,9 @@
   </button>
   <button class="nav-btn" data-page="rewards" onclick="showPage('rewards',this)">
     <span class="icon">🎁</span><span>奖励</span>
+  </button>
+  <button class="nav-btn" id="nav-auth-btn" onclick="onAuthNavTap()">
+    <span class="icon" id="nav-auth-icon">🔓</span><span id="nav-auth-label">登录</span>
   </button>
 </nav>
 
@@ -508,12 +513,52 @@ function calcAnswerScore(cat, result) {
 // ══════════════════════════════════════
 // 登录 / 登出
 // ══════════════════════════════════════
-function showLoginPage() {
-  document.getElementById('page-login').classList.remove('hidden')
-  document.getElementById('main-nav').style.display = 'none'
-  document.getElementById('fab-add').style.display = 'none'
-  const pages = ['dashboard','detail','add','leaderboard','rewards']
-  pages.forEach(p => document.getElementById('page-'+p).classList.add('hidden'))
+function updateAuthNav() {
+  const u = state.currentUser
+  const icon = document.getElementById('nav-auth-icon')
+  const label = document.getElementById('nav-auth-label')
+  if (u) {
+    icon.textContent = u.avatar
+    label.textContent = '退出'
+  } else {
+    icon.textContent = '🔓'
+    label.textContent = '登录'
+  }
+}
+
+function onAuthNavTap() {
+  if (state.currentUser) {
+    doLogout()
+  } else {
+    showPageOnly('login')
+  }
+}
+
+function doGuest() {
+  // 进入游客模式（null 用户），直接进主界面
+  state.currentUser = null
+  enterApp()
+}
+
+function doLogout() {
+  showModal('退出登录', `确认退出？`, () => {
+    state.currentUser = null
+    state.lbData = null
+    document.getElementById('page-login').classList.remove('hidden')
+    // 清空登录表单
+    document.getElementById('login-username').value = ''
+    document.getElementById('login-password').value = ''
+    document.getElementById('login-error').textContent = ''
+    enterApp()
+  })
+}
+
+function enterApp() {
+  document.getElementById('page-login').classList.add('hidden')
+  document.getElementById('fab-add').style.display = isAdmin() ? 'flex' : 'none'
+  updateAuthNav()
+  loadDashboard()
+  showPageOnly('dashboard')
 }
 
 function doLogin() {
@@ -527,12 +572,8 @@ function doLogin() {
   }
   errEl.textContent = ''
   state.currentUser = { username, ...account }
-  document.getElementById('page-login').classList.add('hidden')
-  document.getElementById('main-nav').style.display = 'flex'
-  // admin 才显示 + 按钮
-  document.getElementById('fab-add').style.display = isAdmin() ? 'flex' : 'none'
-  loadDashboard()
-  showPageOnly('dashboard')
+  state.lbData = null
+  enterApp()
 }
 
 // ══════════════════════════════════════
@@ -650,14 +691,8 @@ async function loadDashboard() {
 
   renderSessionBanner()
 
-  // 学生用户只显示自己的卡片，admin 显示全部
-  let displayStudents = stuRes.data
-  if (!isAdmin() && u && u.studentId) {
-    displayStudents = stuRes.data.filter(s => s.id === u.studentId)
-  }
-
-  const maxPts = Math.max(...displayStudents.map(s => s.available_points || 0))
-  document.getElementById('dashboard-cards').innerHTML = displayStudents.map(s => {
+  const maxPts = Math.max(...stuRes.data.map(s => s.available_points || 0))
+  document.getElementById('dashboard-cards').innerHTML = stuRes.data.map(s => {
     const lead = (s.available_points || 0) === maxPts && maxPts > 0 && isAdmin()
     return `
     <div class="card score-card ${lead?'lead':''}" onclick="openDetail('${s.id}')">
@@ -682,10 +717,6 @@ async function loadDashboard() {
 // 详情页
 // ══════════════════════════════════════
 function openDetail(studentId) {
-  // 学生只能查看自己的
-  if (!isAdmin() && state.currentUser && state.currentUser.studentId !== studentId) {
-    showToast('只能查看自己的记录'); return
-  }
   state.detailStudentId = studentId
   state.detailFilter = null
   state.detailEvents = []
@@ -1175,30 +1206,33 @@ async function loadRewards() {
 
   state.students = stuRes.data || state.students
 
-  // 学生默认选自己
+  // admin 默认选第一个；学生默认选自己；未登录默认选第一个（只读）
   if (!isAdmin() && state.currentUser && state.currentUser.studentId) {
     state.rwSelectedStudentId = state.currentUser.studentId
   } else if (!state.rwSelectedStudentId && state.students.length > 0) {
     state.rwSelectedStudentId = state.students[0].id
   }
 
-  document.getElementById('rw-stu-bar').innerHTML = state.students.map(s => {
-    const isMe = !isAdmin() && state.currentUser && state.currentUser.studentId !== s.id
-    if (isMe) return '' // 学生只看自己
-    return `
+  // 学生切换 tab 显示自己积分；admin/guest 可切换看所有人
+  document.getElementById('rw-stu-bar').innerHTML = state.students.map(s => `
     <div class="stu-chip ${state.rwSelectedStudentId === s.id ? 'active' : ''}" onclick="selectRwStudent('${s.id}')">
       ${s.avatar} ${s.name}
       <span class="chip-pts">${s.available_points||0}分</span>
     </div>`
-  }).join('')
+  ).join('')
 
   const curStudent = state.students.find(s => s.id === state.rwSelectedStudentId)
   const curPts = curStudent ? (curStudent.available_points || 0) : 0
 
   document.getElementById('rw-reward-list').innerHTML = rwRes.data.length ? rwRes.data.map(r => {
-    const canRedeem = curPts >= r.points
-    // 学生可以兑换自己的积分；admin 也可以
-    const btnDisabled = !canRedeem
+    const canAfford = curPts >= r.points
+    // 未登录：不能兑换；学生：只能兑换自己选中的（且只有选自己时才能点）；admin：全可
+    const u = state.currentUser
+    const isOwnOrAdmin = !u ? false
+      : isAdmin() ? true
+      : u.studentId === state.rwSelectedStudentId
+    const btnDisabled = !canAfford || !isOwnOrAdmin
+    const btnTitle = !u ? '请先登录' : (!isOwnOrAdmin ? '只能兑换自己的积分' : '')
     return `
     <div class="reward-item">
       <span class="rw-icon">${r.icon || '🎁'}</span>
@@ -1208,7 +1242,7 @@ async function loadRewards() {
       </div>
       <div class="rw-right">
         <span class="rw-cost">${r.points} 分</span>
-        <button class="rw-btn" ${btnDisabled ? 'disabled' : ''} onclick="redeemReward('${r.id}','${r.name}',${r.points})">兑换</button>
+        <button class="rw-btn" ${btnDisabled ? 'disabled' : ''} title="${btnTitle}" onclick="redeemReward('${r.id}','${r.name}',${r.points})">兑换</button>
       </div>
     </div>`
   }).join('') : '<div class="empty"><span class="eicon">🎁</span>暂无奖励项目</div>'
@@ -1232,7 +1266,6 @@ async function loadRewards() {
 }
 
 function selectRwStudent(id) {
-  if (!isAdmin()) return // 学生不能切换
   state.rwSelectedStudentId = id
   loadRewards()
 }
@@ -1262,14 +1295,15 @@ function redeemReward(rewardId, rewardName, points) {
 }
 
 // ══════════════════════════════════════
-// 初始化 — 先显示登录页
+// 初始化 — 直接以游客模式进入主页
 // ══════════════════════════════════════
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('page-login') && !document.getElementById('page-login').classList.contains('hidden')) {
+  if (e.key === 'Enter' && !document.getElementById('page-login').classList.contains('hidden')) {
     doLogin()
   }
 })
-showLoginPage()
+// 默认游客模式，直接加载主页
+enterApp()
 </script>
 </body>
 </html>
