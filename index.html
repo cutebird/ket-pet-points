@@ -400,6 +400,14 @@
         <span class="pp-num text-pos" id="add-checkin-pts">0</span>
       </div>
     </div>
+    <div id="add-recitation-section" class="hidden">
+      <div style="font-size:13px;color:var(--text-sub);margin-bottom:10px;font-weight:500">完成程度</div>
+      <div class="ans-btns" id="add-recitation-btns"></div>
+      <div class="points-preview">
+        <span class="pp-label">本次得分：</span>
+        <span class="pp-num text-pos" id="add-recitation-pts">0</span>
+      </div>
+    </div>
   </div>
 
   <div class="card hidden" id="add-note-section">
@@ -514,15 +522,19 @@ const EVENT_CATEGORIES = {
   checkin_baici:       { label: '百词斩打卡',      group: 'checkin',  icon: '📖', defaultPoints: 0  },
   gift:                { label: '赠送积分',        group: 'other',    icon: '🎁', defaultPoints: 0  },
   behavior_bad:        { label: '违反纪律',       group: 'behavior', icon: '⚠️', defaultPoints: -5 },
-  hw_complete:         { label: '按时完成作业',   group: 'homework', icon: '📝', defaultPoints: 10 },
-  hw_revised:          { label: '认真修改作业',   group: 'homework', icon: '✏️', defaultPoints: 6  },
-  hw_excellent:        { label: '作业评为优秀',   group: 'homework', icon: '⭐', defaultPoints: 8  },
-  hw_late:             { label: '迟交作业',       group: 'homework', icon: '⏰', defaultPoints: -3 },
-  hw_missing:          { label: '未完成作业',     group: 'homework', icon: '❌', defaultPoints: -10},
+  hw_complete:         { label: '按时完成作业',   group: 'writing',  icon: '📝', defaultPoints: 10 },
+  hw_revised:          { label: '认真修改作业',   group: 'writing',  icon: '✏️', defaultPoints: 6  },
+  hw_excellent:        { label: '作业评为优秀',   group: 'writing',  icon: '⭐', defaultPoints: 8  },
+  hw_late:             { label: '迟交作业',       group: 'writing',  icon: '⏰', defaultPoints: -3 },
+  hw_missing:          { label: '未完成作业',     group: 'writing',  icon: '❌', defaultPoints: -10},
+  recite_excellent:    { label: '背诵·优秀',      group: 'recitation', icon: '🎤', points: 10 },
+  recite_partial:      { label: '背诵·部分',      group: 'recitation', icon: '🎤', points: 5  },
+  recite_little:       { label: '背诵·少部分',    group: 'recitation', icon: '🎤', points: 3  },
+  recite_none:         { label: '背诵·未完成',    group: 'recitation', icon: '🎤', points: 0  },
   activity:            { label: '参与课堂活动',   group: 'other',    icon: '🎮', defaultPoints: 5  },
   bonus:               { label: '教师特别奖励',   group: 'other',    icon: '🎁', defaultPoints: 0  },
 }
-const GROUP_LABELS = { answer: '回答问题', behavior: '课堂表现', homework: '作业', checkin: '百词斩打卡', other: '其他' }
+const GROUP_LABELS = { answer: '回答问题', behavior: '课堂表现', writing: '书面作业', recitation: '背诵作业', checkin: '百词斩打卡', other: '其他' }
 const ANSWER_RESULTS = { correct: { label: '答对', mul: 1 }, half: { label: '半对', mul: 0.5 }, wrong: { label: '答错', mul: 0 } }
 const STUDENT_COLORS = ['#007AFF', '#FF9500']
 
@@ -543,6 +555,7 @@ let state = {
   addCategory: null,
   addAnswerResult: 'correct',
   addCheckinDays: 7,
+  addRecitationKey: null,
   lbTab: 'weekly',
   lbData: null,
   rwTab: 'rewards',
@@ -1180,6 +1193,7 @@ function openAddPage(presetStudentId) {
   if (!isAdmin()) { showToast('无权限操作'); return }
   state.addCategory = null
   state.addAnswerResult = 'correct'
+  state.addRecitationKey = null
   if (presetStudentId) {
     const idx = state.students.findIndex(s => s.id === presetStudentId)
     state.addStudentIdx = idx >= 0 ? idx : 0
@@ -1220,19 +1234,29 @@ function renderAddCategories() {
     if (!groups[v.group]) groups[v.group] = []
     groups[v.group].push({ key: k, ...v })
   })
-  document.getElementById('add-cat-list').innerHTML = Object.entries(groups).map(([g, items]) => `
+  document.getElementById('add-cat-list').innerHTML = Object.entries(groups).map(([g, items]) => {
+    // 背诵 group 只显示一个入口 chip
+    const chips = g === 'recitation'
+      ? [{ key: items[0].key, icon: '🎤', label: '背诵作业' }]
+      : items
+    const isRecitationActive = g === 'recitation' && items.some(i => i.key === state.addCategory)
+    return `
     <div class="cat-group-label">${GROUP_LABELS[g]}</div>
     <div class="cat-grid">
-      ${items.map(c => `
-        <div class="cat-chip ${state.addCategory === c.key ? 'active' : ''}" onclick="selectCategory('${c.key}')">
+      ${chips.map(c => `
+        <div class="cat-chip ${(g === 'recitation' ? isRecitationActive : state.addCategory === c.key) ? 'active' : ''}" onclick="selectCategory('${c.key}')">
           ${c.icon} ${c.label}
         </div>`).join('')}
-    </div>
-  `).join('')
+    </div>`
+  }).join('')
 }
 
 function selectCategory(key) {
   state.addCategory = key
+  // 进入背诵 group 时初始化选项状态
+  if (EVENT_CATEGORIES[key]?.group === 'recitation') {
+    state.addRecitationKey = key
+  }
   renderAddCategories()
   renderAddScoreSection()
 }
@@ -1247,9 +1271,11 @@ function renderAddScoreSection() {
   const cat = EVENT_CATEGORIES[state.addCategory]
   const isAnswer = cat.group === 'answer'
   const isCheckin = cat.group === 'checkin'
+  const isRecitation = cat.group === 'recitation'
   document.getElementById('add-answer-section').classList.toggle('hidden', !isAnswer)
   document.getElementById('add-checkin-section').classList.toggle('hidden', !isCheckin)
-  document.getElementById('add-custom-section').classList.toggle('hidden', isAnswer || isCheckin)
+  document.getElementById('add-recitation-section').classList.toggle('hidden', !isRecitation)
+  document.getElementById('add-custom-section').classList.toggle('hidden', isAnswer || isCheckin || isRecitation)
 
   if (isAnswer) {
     document.getElementById('add-ans-btns').innerHTML = Object.entries(ANSWER_RESULTS).map(([k,v]) =>
@@ -1264,6 +1290,20 @@ function renderAddScoreSection() {
       `<div class="ans-btn ${state.addCheckinDays === d ? 'active' : ''}" onclick="selectCheckinDays(${d})">${d} 天</div>`
     ).join('')
     document.getElementById('add-checkin-pts').textContent = '+' + (state.addCheckinDays * 2)
+  } else if (isRecitation) {
+    const RECITATION_LEVELS = [
+      { key: 'recite_excellent', label: '优秀（全部）' },
+      { key: 'recite_partial',   label: '部分背过' },
+      { key: 'recite_little',    label: '少部分' },
+      { key: 'recite_none',      label: '未完成' },
+    ]
+    document.getElementById('add-recitation-btns').innerHTML = RECITATION_LEVELS.map(l =>
+      `<div class="ans-btn ${state.addRecitationKey === l.key ? 'active' : ''}" onclick="selectRecitationKey('${l.key}')">${l.label}</div>`
+    ).join('')
+    const pts = state.addRecitationKey ? (EVENT_CATEGORIES[state.addRecitationKey]?.points ?? 0) : 0
+    const el = document.getElementById('add-recitation-pts')
+    el.textContent = fmtPts(pts)
+    el.className = 'pp-num ' + ptsClass(pts)
   } else {
     const defaultPts = cat.defaultPoints || 0
     document.getElementById('add-pts-input').value = defaultPts
@@ -1280,17 +1320,26 @@ function selectCheckinDays(days) {
   renderAddScoreSection()
 }
 
+function selectRecitationKey(key) {
+  state.addRecitationKey = key
+  state.addCategory = key
+  renderAddScoreSection()
+}
+
 async function submitEvent() {
   if (!isAdmin()) { showToast('无权限操作'); return }
   if (!state.addCategory) { showToast('请选择积分类型'); return }
   const cat = EVENT_CATEGORIES[state.addCategory]
   const isAnswer = cat.group === 'answer'
   const isCheckin = cat.group === 'checkin'
+  const isRecitation = cat.group === 'recitation'
   const points = isAnswer
     ? calcAnswerScore(state.addCategory, state.addAnswerResult)
     : isCheckin
       ? state.addCheckinDays * 2
-      : (parseInt(document.getElementById('add-pts-input').value) || 0)
+      : isRecitation
+        ? (cat.points ?? 0)
+        : (parseInt(document.getElementById('add-pts-input').value) || 0)
   const note = document.getElementById('add-note').value.trim()
 
   const isBoth = state.addStudentIdx === state.students.length
