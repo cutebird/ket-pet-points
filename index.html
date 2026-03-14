@@ -503,9 +503,9 @@ const ACCOUNTS = {
 // 常量
 // ══════════════════════════════════════
 const EVENT_CATEGORIES = {
-  answer_easy:         { label: '回答问题·简单', group: 'answer',   icon: '💬', fullScore: 2  },
-  answer_middle:       { label: '回答问题·中等', group: 'answer',   icon: '💬', fullScore: 4  },
-  answer_hard:         { label: '回答问题·困难', group: 'answer',   icon: '💬', fullScore: 8  },
+  answer_easy:         { label: '回答问题·简单', group: 'answer',   icon: '💬', fullScore: 1  },
+  answer_middle:       { label: '回答问题·中等', group: 'answer',   icon: '💬', fullScore: 2  },
+  answer_hard:         { label: '回答问题·困难', group: 'answer',   icon: '💬', fullScore: 3  },
   behavior_active:     { label: '积极举手',       group: 'behavior', icon: '✋', defaultPoints: 3  },
   behavior_discipline: { label: '遵守纪律',       group: 'behavior', icon: '😊', defaultPoints: 10 },
   behavior_help:       { label: '帮助同学',       group: 'behavior', icon: '🤝', defaultPoints: 5  },
@@ -594,7 +594,7 @@ function showModal(title, body, onConfirm) {
 function calcAnswerScore(cat, result) {
   const c = EVENT_CATEGORIES[cat]
   if (!c || c.group !== 'answer') return 0
-  return Math.round(c.fullScore * ANSWER_RESULTS[result].mul)
+  return c.fullScore * ANSWER_RESULTS[result].mul
 }
 
 // ══════════════════════════════════════
