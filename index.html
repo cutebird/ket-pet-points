@@ -594,7 +594,7 @@ function showModal(title, body, onConfirm) {
 function calcAnswerScore(cat, result) {
   const c = EVENT_CATEGORIES[cat]
   if (!c || c.group !== 'answer') return 0
-  return c.fullScore * ANSWER_RESULTS[result].mul
+  return Math.round(c.fullScore * ANSWER_RESULTS[result].mul)
 }
 
 // ══════════════════════════════════════
