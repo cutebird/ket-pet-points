@@ -380,6 +380,8 @@
     <div id="add-answer-section" class="hidden">
       <div style="font-size:13px;color:var(--text-sub);margin-bottom:10px;font-weight:500">回答结果</div>
       <div class="ans-btns" id="add-ans-btns"></div>
+      <div style="font-size:13px;color:var(--text-sub);margin:12px 0 10px;font-weight:500">回答次数</div>
+      <div class="ans-btns" id="add-ans-count-btns"></div>
       <div class="points-preview">
         <span class="pp-label">本次得分：</span>
         <span class="pp-num" id="add-calc-pts">0</span>
@@ -554,6 +556,7 @@ let state = {
   addStudentIdx: 0,
   addCategory: null,
   addAnswerResult: 'correct',
+  addAnswerCount: 1,
   addCheckinDays: 7,
   addRecitationKey: null,
   lbTab: 'weekly',
@@ -607,7 +610,7 @@ function showModal(title, body, onConfirm) {
 function calcAnswerScore(cat, result) {
   const c = EVENT_CATEGORIES[cat]
   if (!c || c.group !== 'answer') return 0
-  return Math.round(c.fullScore * ANSWER_RESULTS[result].mul)
+  return c.fullScore * ANSWER_RESULTS[result].mul
 }
 
 // ══════════════════════════════════════
@@ -1193,6 +1196,7 @@ function openAddPage(presetStudentId) {
   if (!isAdmin()) { showToast('无权限操作'); return }
   state.addCategory = null
   state.addAnswerResult = 'correct'
+  state.addAnswerCount = 1
   state.addRecitationKey = null
   if (presetStudentId) {
     const idx = state.students.findIndex(s => s.id === presetStudentId)
@@ -1281,7 +1285,10 @@ function renderAddScoreSection() {
     document.getElementById('add-ans-btns').innerHTML = Object.entries(ANSWER_RESULTS).map(([k,v]) =>
       `<div class="ans-btn ${state.addAnswerResult === k ? 'active' : ''}" onclick="selectAnswerResult('${k}')">${v.label}</div>`
     ).join('')
-    const pts = calcAnswerScore(state.addCategory, state.addAnswerResult)
+    document.getElementById('add-ans-count-btns').innerHTML = [1,2,3,4,5].map(n =>
+      `<div class="ans-btn ${state.addAnswerCount === n ? 'active' : ''}" onclick="selectAnswerCount(${n})">${n} 次</div>`
+    ).join('')
+    const pts = calcAnswerScore(state.addCategory, state.addAnswerResult) * state.addAnswerCount
     const el = document.getElementById('add-calc-pts')
     el.textContent = fmtPts(pts)
     el.className = 'pp-num ' + ptsClass(pts)
@@ -1315,6 +1322,11 @@ function selectAnswerResult(result) {
   renderAddScoreSection()
 }
 
+function selectAnswerCount(count) {
+  state.addAnswerCount = count
+  renderAddScoreSection()
+}
+
 function selectCheckinDays(days) {
   state.addCheckinDays = days
   renderAddScoreSection()
@@ -1334,7 +1346,7 @@ async function submitEvent() {
   const isCheckin = cat.group === 'checkin'
   const isRecitation = cat.group === 'recitation'
   const points = isAnswer
-    ? calcAnswerScore(state.addCategory, state.addAnswerResult)
+    ? calcAnswerScore(state.addCategory, state.addAnswerResult) * state.addAnswerCount
     : isCheckin
       ? state.addCheckinDays * 2
       : isRecitation
